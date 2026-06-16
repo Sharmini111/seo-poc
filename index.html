@@ -1,182 +1,379 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SEO Content Agent POC</title>
+  <title>SEO Content Agent</title>
   <style>
-    body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px}
+    body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px}
     h2{color:#1F4E79}
     h3{color:#2E75B6}
-    input,textarea{width:100%;padding:10px;margin:10px 0;font-size:14px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
-    textarea{height:100px;resize:vertical}
+    input,textarea,select{width:100%;padding:10px;margin:10px 0;font-size:14px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
+    textarea{height:120px;resize:vertical}
     button{padding:12px 24px;margin:5px;font-size:14px;cursor:pointer;border:none;border-radius:6px}
     .submit{background:#185FA5;color:white}
     .approve{background:#0F6E56;color:white}
     .reject{background:#A32D2D;color:white}
     .resubmit{background:#854F0B;color:white}
     #article-box{display:none;margin-top:20px}
-    #correction-box{display:none;margin-top:20px;background:#FFF3CD;padding:16px;border-radius:8px;border:1px solid #EF9F27}
+    #review-box{display:none;margin-top:20px;background:#FFF3CD;padding:16px;border-radius:8px;border:1px solid #EF9F27}
     #result-box{display:none;margin-top:20px;background:#E1F5EE;padding:16px;border-radius:8px}
     #loading{display:none;color:#888;margin:10px 0}
-    pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:6px;font-size:13px}
+    pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:6px;font-size:13px;max-height:500px;overflow-y:auto}
     .cost{background:#EBF5FB;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
+    .seo{background:#E1F5EE;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
+    .eeat{background:#F3E8FF;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
+    .unique{background:#FFF3CD;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     a{color:#0F6E56;font-weight:bold}
+    label{font-size:13px;font-weight:500;color:#333;margin-top:8px;display:block}
   </style>
 </head>
 <body>
 
-<h2>SEO Content Agent POC</h2>
+<h2>SEO Content Agent</h2>
 
+<!-- STEP 1 — KEYWORD INPUT -->
 <div id="step1-box">
-  <h3>Step 1 — Enter your keyword</h3>
-  <input id="keyword" type="text" placeholder="e.g. running shoe cushioning guide"/>
-  <button class="submit" onclick="submitKeyword()">Generate Article →</button>
-  <p id="loading">Generating article... this takes about few seconds</p>
+  <h3>Step 1 - Start a New Article</h3>
+  <label>Target Keyword (required)</label>
+  <input id="keyword" type="text" placeholder="e.g. best trail running shoes for flat feet"/>
+  <label>Content Topic Ideas / Notes (optional)</label>
+  <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $150, target beginners"></textarea>
+  <label>Target Country</label>
+  <select id="target_country">
+    <option value="us">United States</option>
+    <option value="gb">United Kingdom</option>
+    <option value="au">Australia</option>
+    <option value="nz">New Zealand</option>
+    <option value="ca">Canada</option>
+    <option value="lk">Sri Lanka</option>
+  </select>
+  <button class="submit" onclick="submitKeyword()">Research and Generate Article</button>
+  <p id="loading">Running full pipeline... this takes 3-5 minutes</p>
 </div>
 
+<!-- STEP 2 — ARTICLE DISPLAY -->
 <div id="article-box">
-  <h3>Step 2 — Generated Article</h3>
+  <h3>Step 2 - Generated Article</h3>
+  <div class="unique" id="unique-display"></div>
   <div class="cost" id="cost-display"></div>
+  <div class="seo" id="seo-display"></div>
+  <div class="eeat" id="eeat-display"></div>
+  <h3>Article</h3>
   <pre id="article-display"></pre>
-  <h3>Step 3 — Human Review</h3>
-  <p>Read the article above. Is it acceptable to publish?</p>
-  <button class="approve" onclick="submitDecision('approved')">✓ Approved — Save to Google Docs</button>
-  <button class="reject" onclick="showCorrectionBox()">✗ Reject — Add corrections</button>
+  <h3>Step 3 - Human Review</h3>
+  <p>Read the article and review all scores above. Is it acceptable to publish?</p>
+  <button class="approve" onclick="showApprove()">Approve and Save to Google Docs</button>
+  <button class="reject" onclick="showReview()">Request Revisions</button>
 </div>
 
-<div id="correction-box">
-  <h3>What needs to be fixed?</h3>
-  <p>Describe what you want changed in the article. This will be added to the prompt for the next generation.</p>
-  <textarea id="correction-text" placeholder="e.g. Make it more formal. Add more details about health benefits. Remove the history section."></textarea>
-  <button class="resubmit" onclick="submitCorrection()">Regenerate with corrections →</button>
-  <button class="submit" onclick="hideCorrectionBox()">← Go back to article</button>
+<!-- REVIEW FORM -->
+<div id="review-box">
+  <h3>Request Revisions</h3>
+  <label>Revision Instructions (required)</label>
+  <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing matcha vs sencha. Make the tone less formal."></textarea>
+  <label>Revision Type (required)</label>
+  <select id="revision_type">
+    <option value="minor_edit">Minor edit (tone/length) - only rewrites the article, no Ahrefs calls</option>
+    <option value="new_angle">New angle needed - regenerates unique factor, brief and article</option>
+    <option value="change_keyword">Change keyword - restarts entire pipeline</option>
+  </select>
+  <button class="resubmit" onclick="submitRevision()">Submit Revision Request</button>
+  <button class="submit" onclick="hideReview()">Go back to article</button>
 </div>
 
+<!-- RESULT -->
 <div id="result-box">
-  <h3>✓ Article saved to Google Docs</h3>
+  <h3>Article saved to Google Docs</h3>
   <p id="doc-link"></p>
   <button class="submit" onclick="startOver()">Start new article</button>
 </div>
 
 <script>
- const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/start';
- const CORRECTION_URL = 'https://sharmini99.app.n8n.cloud/webhook/correction';
-
-  let resumeUrl = '';
+ // const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook-test/seo-agent';
+  //const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook-test/seo-review';
+const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/seo-agent';
+const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
+  let currentData    = {};
   let currentKeyword = '';
+  let currentNotes   = '';
+  let currentCountry = 'us';
 
-  async function submitKeyword(correctionText = '') {
-    const keyword = correctionText
+  async function submitKeyword(revisionInstructions, revisionType) {
+    const keyword = revisionInstructions
       ? currentKeyword
       : document.getElementById('keyword').value.trim();
+    const notes = revisionInstructions
+      ? currentNotes
+      : document.getElementById('operator_topic_notes').value.trim();
+    const country = revisionInstructions
+      ? currentCountry
+      : document.getElementById('target_country').value;
 
     if (!keyword) { alert('Please enter a keyword first'); return; }
 
     currentKeyword = keyword;
+    currentNotes   = notes;
+    currentCountry = country;
 
     document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerText = 'Running full pipeline... this takes 3-5 minutes';
     document.querySelector('.submit').disabled = true;
     document.querySelector('.submit').innerText = 'Generating...';
-    document.getElementById('article-box').style.display = 'none';
-    document.getElementById('correction-box').style.display = 'none';
-    document.getElementById('result-box').style.display = 'none';
+    document.getElementById('article-box').style.display  = 'none';
+    document.getElementById('result-box').style.display   = 'none';
+    document.getElementById('review-box').style.display   = 'none';
+
+    let promptNotes = notes;
+    if (revisionInstructions && revisionType === 'new_angle') {
+      promptNotes = notes + '\n\nNEW ANGLE INSTRUCTIONS (create a completely different angle): ' + revisionInstructions;
+    }
 
     try {
-      const urlToUse = correctionText ? CORRECTION_URL : WEBHOOK_URL;
-
-      const res = await fetch(urlToUse, {
+      const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          keyword: keyword,
-          correction: correctionText
+          keyword:              keyword,
+          operator_topic_notes: promptNotes,
+          target_country:       country
         })
       });
 
-      const data = await res.json();
-      console.log('Response data:', JSON.stringify(data));
+      const raw = await res.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch(e) {
+        console.error('JSON parse error:', raw.substring(0, 500));
+        alert('Response parsing error. Check console for details.');
+        document.getElementById('loading').style.display = 'none';
+        document.querySelector('.submit').disabled = false;
+        document.querySelector('.submit').innerText = 'Research and Generate Article';
+        return;
+      }
+
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
+      currentData = item;
 
-      resumeUrl = item.resumeUrl;
+      displayArticle(item);
 
-      document.getElementById('article-display').innerText = item.article;
-      document.getElementById('cost-display').innerHTML =
-        'LLM Cost: <strong>$' + item.costUSD + '</strong> &nbsp;|&nbsp; ' +
-        'Input tokens: ' + item.inputTokens + ' &nbsp;|&nbsp; ' +
-        'Output tokens: ' + item.outputTokens;
-
-      document.getElementById('loading').style.display = 'none';
+      document.getElementById('loading').style.display  = 'none';
       document.getElementById('article-box').style.display = 'block';
       document.querySelector('.submit').disabled = false;
-      document.querySelector('.submit').innerText = 'Generate Article →';
+      document.querySelector('.submit').innerText = 'Research and Generate Article';
 
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Check your webhook URL and try again.');
-      document.getElementById('loading').style.display = 'none';
+      document.getElementById('loading').style.display  = 'none';
       document.querySelector('.submit').disabled = false;
-      document.querySelector('.submit').innerText = 'Generate Article →';
+      document.querySelector('.submit').innerText = 'Research and Generate Article';
     }
   }
 
-  function showCorrectionBox() {
-    document.getElementById('correction-box').style.display = 'block';
+  function displayArticle(item) {
+    document.getElementById('unique-display').innerHTML =
+      '<strong>Unique Factor:</strong> ' + (item.unique_factor || 'N/A');
+
+    document.getElementById('cost-display').innerHTML =
+      '<strong>Cost:</strong> ' + (item.article_cost || '$0.00') +
+      ' | Claude: ' + (item.claude_cost || '$0.00') +
+      ' | Ahrefs: ' + (item.ahrefs_cost || '$0.00') +
+      ' | Input tokens: ' + (item.inputTokens || 0) +
+      ' | Output tokens: ' + (item.outputTokens || 0);
+
+    const seo = item.seo_check || {};
+    document.getElementById('seo-display').innerHTML =
+      '<strong>SEO Check:</strong>' +
+      ' Keyword in intro: ' + (seo.keyword_in_intro ? 'Yes' : 'No') +
+      ' | Keyword in heading: ' + (seo.keyword_in_heading ? 'Yes' : 'No') +
+      ' | Density: ' + (seo.keyword_density || 'N/A') +
+      ' | Word count: ' + (seo.total_words || 0);
+
+    const eeat = item.eeat_score || {};
+    document.getElementById('eeat-display').innerHTML =
+      '<strong>E-E-A-T Score:</strong>' +
+      ' Overall: ' + (eeat.overall || 0) + '/10' +
+      ' | Experience: ' + (eeat.experience || 0) +
+      ' | Expertise: ' + (eeat.expertise || 0) +
+      ' | Authority: ' + (eeat.authoritativeness || 0) +
+      ' | Trust: ' + (eeat.trustworthiness || 0);
+
+    document.getElementById('article-display').innerText = item.article || '';
+  }
+
+  function showApprove() {
+    if (confirm('Approve this article and save to Google Docs?')) {
+      submitApproval();
+    }
+  }
+
+  function showReview() {
+    document.getElementById('review-box').style.display  = 'block';
     document.getElementById('article-box').style.display = 'none';
   }
 
-  function hideCorrectionBox() {
-    document.getElementById('correction-box').style.display = 'none';
+  function hideReview() {
+    document.getElementById('review-box').style.display  = 'none';
     document.getElementById('article-box').style.display = 'block';
   }
 
-  async function submitCorrection() {
-    const correction = document.getElementById('correction-text').value.trim();
-    if (!correction) { alert('Please describe what needs to be fixed'); return; }
-    document.getElementById('correction-text').value = '';
-    await submitKeyword(correction);
-  }
+  async function submitRevision() {
+    const instructions = document.getElementById('revision_instructions').value.trim();
+    const revisionType = document.getElementById('revision_type').value;
 
-  async function submitDecision(decision) {
-    if (decision === 'approved') {
-      document.querySelector('.approve').innerText = 'Saving to Google Docs...';
-      document.querySelector('.approve').disabled = true;
+    if (!instructions) { alert('Please describe what needs to be changed'); return; }
+
+    if (revisionType === 'change_keyword') {
+      document.getElementById('review-box').style.display  = 'none';
+      document.getElementById('article-box').style.display = 'none';
+      document.getElementById('step1-box').style.display   = 'block';
+      document.getElementById('keyword').value = '';
+      return;
     }
 
+    document.getElementById('revision_instructions').value = '';
+    hideReview();
+
+    if (revisionType === 'minor_edit') {
+      await submitMinorEdit(instructions);
+    } else {
+      await submitKeyword(instructions, revisionType);
+    }
+  }
+
+  async function submitMinorEdit(instructions) {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerText = 'Rewriting article... this takes about 30 seconds';
+    document.getElementById('article-box').style.display = 'none';
+
     try {
-      const res = await fetch(resumeUrl, {
+      const res = await fetch(REVIEW_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision: decision })
+        body: JSON.stringify({
+          decision:              'minor_edit',
+          revision_type:         'minor_edit',
+          revision_instructions: instructions,
+          keyword:               currentKeyword,
+          article:               currentData.article              || '',
+          unique_factor:         currentData.unique_factor        || '',
+          content_brief:         currentData.content_brief        || '',
+          content_gaps:          currentData.content_gaps         || '',
+          secondary_keywords:    currentData.secondary_keywords   || '',
+          search_volume:         currentData.search_volume        || 0,
+          keyword_difficulty:    currentData.keyword_difficulty   || 0,
+          operator_topic_notes:  currentData.operator_topic_notes || '',
+          seo_check:             currentData.seo_check            || {},
+          eeat_score:            currentData.eeat_score           || {},
+          article_cost:          currentData.article_cost         || '',
+          inputTokens:           currentData.inputTokens          || 0,
+          outputTokens:          currentData.outputTokens         || 0
+        })
       });
 
-      const data = await res.json();
-      console.log('Approval response:', JSON.stringify(data));
-      const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
-
-      if (decision === 'approved') {
-        document.getElementById('article-box').style.display = 'none';
-        document.getElementById('result-box').style.display = 'block';
-        const docUrl = item.docUrl || '';
-        const docTitle = item.docTitle || 'SEO Article';
-        document.getElementById('doc-link').innerHTML =
-          '<a href="' + docUrl + '" target="_blank">📄 Open Google Doc: ' + docTitle + '</a>';
+      const raw = await res.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch(e) {
+        console.error('JSON parse error:', raw.substring(0, 500));
+        alert('Response parsing error. Check console.');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('article-box').style.display = 'block';
+        return;
       }
+
+      const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
+      currentData = item;
+
+      displayArticle(item);
+
+      document.getElementById('loading').style.display  = 'none';
+      document.getElementById('article-box').style.display = 'block';
 
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Try again.');
-      document.querySelector('.approve').innerText = '✓ Approved — Save to Google Docs';
-      document.querySelector('.approve').disabled = false;
+      document.getElementById('loading').style.display  = 'none';
+      document.getElementById('article-box').style.display = 'block';
+    }
+  }
+
+  async function submitApproval() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerText = 'Saving to Google Docs...';
+    document.getElementById('article-box').style.display = 'none';
+
+    try {
+      const res = await fetch(REVIEW_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision:              'approved',
+          revision_type:         'approved',
+          keyword:               currentKeyword,
+          article:               currentData.article              || '',
+          unique_factor:         currentData.unique_factor        || '',
+          content_brief:         currentData.content_brief        || '',
+          content_gaps:          currentData.content_gaps         || '',
+          secondary_keywords:    currentData.secondary_keywords   || '',
+          search_volume:         currentData.search_volume        || 0,
+          keyword_difficulty:    currentData.keyword_difficulty   || 0,
+          operator_topic_notes:  currentData.operator_topic_notes || '',
+          seo_check:             currentData.seo_check            || {},
+          eeat_score:            currentData.eeat_score           || {},
+          article_cost:          currentData.article_cost         || '',
+          inputTokens:           currentData.inputTokens          || 0,
+          outputTokens:          currentData.outputTokens         || 0
+        })
+      });
+
+      const raw = await res.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch(e) {
+        console.error('JSON parse error on approval:', raw.substring(0, 500));
+        alert('Response parsing error. Check console.');
+        document.getElementById('loading').style.display  = 'none';
+        document.getElementById('article-box').style.display = 'block';
+        return;
+      }
+
+      const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result-box').style.display = 'block';
+
+      const docId  = item.docId  || '';
+      const docUrl = docId
+        ? 'https://docs.google.com/document/d/' + docId + '/edit'
+        : (item.docUrl || '');
+      const docTitle = item.docTitle || currentKeyword + ' Draft';
+
+      document.getElementById('doc-link').innerHTML =
+        '<a href="' + docUrl + '" target="_blank">Open Google Doc: ' + docTitle + '</a>';
+
+    } catch(e) {
+      console.error(e);
+      alert('Something went wrong. Try again.');
+      document.getElementById('loading').style.display  = 'none';
+      document.getElementById('article-box').style.display = 'block';
     }
   }
 
   function startOver() {
     document.getElementById('keyword').value = '';
-    document.getElementById('article-box').style.display = 'none';
-    document.getElementById('correction-box').style.display = 'none';
-    document.getElementById('result-box').style.display = 'none';
-    document.getElementById('step1-box').style.display = 'block';
-    resumeUrl = '';
+    document.getElementById('operator_topic_notes').value = '';
+    document.getElementById('article-box').style.display  = 'none';
+    document.getElementById('review-box').style.display   = 'none';
+    document.getElementById('result-box').style.display   = 'none';
+    document.getElementById('step1-box').style.display    = 'block';
+    document.getElementById('loading').innerText = 'Running full pipeline... this takes 3-5 minutes';
     currentKeyword = '';
+    currentNotes   = '';
+    currentCountry = 'us';
+    currentData    = {};
   }
 </script>
 </body>
