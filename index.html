@@ -13,10 +13,12 @@
     .approve{background:#0F6E56;color:white}
     .reject{background:#A32D2D;color:white}
     .resubmit{background:#854F0B;color:white}
+    #step1-box{margin-bottom:20px}
     #article-box{display:none;margin-top:20px}
     #review-box{display:none;margin-top:20px;background:#FFF3CD;padding:16px;border-radius:8px;border:1px solid #EF9F27}
     #result-box{display:none;margin-top:20px;background:#E1F5EE;padding:16px;border-radius:8px}
-    #loading{display:none;color:#888;margin:10px 0}
+    #loading-box{display:none;margin-top:20px;background:#f5f5f5;padding:20px;border-radius:8px;text-align:center}
+    #loading-text{font-size:15px;color:#555;margin:0}
     pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:6px;font-size:13px;max-height:500px;overflow-y:auto}
     .cost{background:#EBF5FB;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .seo{background:#E1F5EE;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
@@ -30,7 +32,7 @@
 
 <h2>SEO Content Agent</h2>
 
-<!-- STEP 1 — KEYWORD INPUT -->
+<!-- STEP 1 - KEYWORD INPUT -->
 <div id="step1-box">
   <h3>Step 1 - Start a New Article</h3>
   <label>Target Keyword (required)</label>
@@ -47,10 +49,14 @@
     <option value="lk">Sri Lanka</option>
   </select>
   <button class="submit" onclick="submitKeyword()">Research and Generate Article</button>
-  <p id="loading">Running full pipeline... this takes 3-5 minutes</p>
 </div>
 
-<!-- STEP 2 — ARTICLE DISPLAY -->
+<!-- LOADING -->
+<div id="loading-box">
+  <p id="loading-text">Running full pipeline... this takes 3-5 minutes</p>
+</div>
+
+<!-- STEP 2 - ARTICLE DISPLAY -->
 <div id="article-box">
   <h3>Step 2 - Generated Article</h3>
   <div class="unique" id="unique-display"></div>
@@ -88,14 +94,26 @@
 </div>
 
 <script>
- // const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook-test/seo-agent';
-  //const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook-test/seo-review';
-const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/seo-agent';
-const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
+  const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/seo-agent';
+  const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
+
   let currentData    = {};
   let currentKeyword = '';
   let currentNotes   = '';
   let currentCountry = 'us';
+
+  function showLoading(message) {
+    document.getElementById('step1-box').style.display   = 'none';
+    document.getElementById('article-box').style.display = 'none';
+    document.getElementById('review-box').style.display  = 'none';
+    document.getElementById('result-box').style.display  = 'none';
+    document.getElementById('loading-text').innerText    = message || 'Running full pipeline... this takes 3-5 minutes';
+    document.getElementById('loading-box').style.display = 'block';
+  }
+
+  function hideLoading() {
+    document.getElementById('loading-box').style.display = 'none';
+  }
 
   async function submitKeyword(revisionInstructions, revisionType) {
     const keyword = revisionInstructions
@@ -114,13 +132,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     currentNotes   = notes;
     currentCountry = country;
 
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('loading').innerText = 'Running full pipeline... this takes 3-5 minutes';
-    document.querySelector('.submit').disabled = true;
-    document.querySelector('.submit').innerText = 'Generating...';
-    document.getElementById('article-box').style.display  = 'none';
-    document.getElementById('result-box').style.display   = 'none';
-    document.getElementById('review-box').style.display   = 'none';
+    showLoading('Running full pipeline... this takes 3-5 minutes');
 
     let promptNotes = notes;
     if (revisionInstructions && revisionType === 'new_angle') {
@@ -145,28 +157,23 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
       } catch(e) {
         console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console for details.');
-        document.getElementById('loading').style.display = 'none';
-        document.querySelector('.submit').disabled = false;
-        document.querySelector('.submit').innerText = 'Research and Generate Article';
+        hideLoading();
+        document.getElementById('step1-box').style.display = 'block';
         return;
       }
 
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item;
 
+      hideLoading();
       displayArticle(item);
-
-      document.getElementById('loading').style.display  = 'none';
       document.getElementById('article-box').style.display = 'block';
-      document.querySelector('.submit').disabled = false;
-      document.querySelector('.submit').innerText = 'Research and Generate Article';
 
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Check your webhook URL and try again.');
-      document.getElementById('loading').style.display  = 'none';
-      document.querySelector('.submit').disabled = false;
-      document.querySelector('.submit').innerText = 'Research and Generate Article';
+      hideLoading();
+      document.getElementById('step1-box').style.display = 'block';
     }
   }
 
@@ -226,8 +233,8 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     if (revisionType === 'change_keyword') {
       document.getElementById('review-box').style.display  = 'none';
       document.getElementById('article-box').style.display = 'none';
-      document.getElementById('step1-box').style.display   = 'block';
       document.getElementById('keyword').value = '';
+      document.getElementById('step1-box').style.display   = 'block';
       return;
     }
 
@@ -242,9 +249,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
   }
 
   async function submitMinorEdit(instructions) {
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('loading').innerText = 'Rewriting article... this takes about 30 seconds';
-    document.getElementById('article-box').style.display = 'none';
+    showLoading('Rewriting article... this takes about 30 seconds');
 
     try {
       const res = await fetch(REVIEW_URL, {
@@ -278,7 +283,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
       } catch(e) {
         console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console.');
-        document.getElementById('loading').style.display = 'none';
+        hideLoading();
         document.getElementById('article-box').style.display = 'block';
         return;
       }
@@ -286,23 +291,20 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item;
 
+      hideLoading();
       displayArticle(item);
-
-      document.getElementById('loading').style.display  = 'none';
       document.getElementById('article-box').style.display = 'block';
 
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Try again.');
-      document.getElementById('loading').style.display  = 'none';
+      hideLoading();
       document.getElementById('article-box').style.display = 'block';
     }
   }
 
   async function submitApproval() {
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('loading').innerText = 'Saving to Google Docs...';
-    document.getElementById('article-box').style.display = 'none';
+    showLoading('Saving to Google Docs...');
 
     try {
       const res = await fetch(REVIEW_URL, {
@@ -335,14 +337,14 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
       } catch(e) {
         console.error('JSON parse error on approval:', raw.substring(0, 500));
         alert('Response parsing error. Check console.');
-        document.getElementById('loading').style.display  = 'none';
+        hideLoading();
         document.getElementById('article-box').style.display = 'block';
         return;
       }
 
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
 
-      document.getElementById('loading').style.display = 'none';
+      hideLoading();
       document.getElementById('result-box').style.display = 'block';
 
       const docId  = item.docId  || '';
@@ -357,7 +359,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Try again.');
-      document.getElementById('loading').style.display  = 'none';
+      hideLoading();
       document.getElementById('article-box').style.display = 'block';
     }
   }
@@ -368,8 +370,8 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     document.getElementById('article-box').style.display  = 'none';
     document.getElementById('review-box').style.display   = 'none';
     document.getElementById('result-box').style.display   = 'none';
+    document.getElementById('loading-box').style.display  = 'none';
     document.getElementById('step1-box').style.display    = 'block';
-    document.getElementById('loading').innerText = 'Running full pipeline... this takes 3-5 minutes';
     currentKeyword = '';
     currentNotes   = '';
     currentCountry = 'us';
