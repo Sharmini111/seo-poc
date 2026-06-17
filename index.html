@@ -32,6 +32,7 @@
 
 <h2>SEO Content Agent</h2>
 
+<!-- STEP 1 - KEYWORD INPUT -->
 <div id="step1-box">
   <h3>Step 1 - Start a New Article</h3>
   <label>Target Keyword (required)</label>
@@ -50,10 +51,12 @@
   <button class="submit" onclick="submitKeyword()">Research and Generate Article</button>
 </div>
 
+<!-- LOADING - outside step1-box so form hides completely -->
 <div id="loading-box">
   <p id="loading-text">Running full pipeline... this takes 3-5 minutes</p>
 </div>
 
+<!-- STEP 2 - ARTICLE DISPLAY -->
 <div id="article-box">
   <h3>Step 2 - Generated Article</h3>
   <div class="unique" id="unique-display"></div>
@@ -68,12 +71,13 @@
   <button class="reject" onclick="showReview()">Request Revisions</button>
 </div>
 
+<!-- REVIEW FORM -->
 <div id="review-box">
   <h3>Request Revisions</h3>
-  <label>Revision Instructions (required)</label>
+  <label id="instructions-label">Revision Instructions (required)</label>
   <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing matcha vs sencha. Make the tone less formal."></textarea>
   <label>Revision Type (required)</label>
-  <select id="revision_type">
+  <select id="revision_type" onchange="handleRevisionTypeChange()">
     <option value="minor_edit">Minor edit (tone/length) - only rewrites the article, no Ahrefs calls</option>
     <option value="new_angle">New angle needed - regenerates unique factor, brief and article</option>
     <option value="change_keyword">Change keyword - restarts entire pipeline</option>
@@ -82,6 +86,7 @@
   <button class="submit" onclick="hideReview()">Go back to article</button>
 </div>
 
+<!-- RESULT -->
 <div id="result-box">
   <h3>Article saved to Google Docs</h3>
   <p id="doc-link"></p>
@@ -90,7 +95,7 @@
 
 <script>
   const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/seo-agent';
-  const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
+const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
   let currentData    = {};
   let currentKeyword = '';
@@ -108,6 +113,19 @@
 
   function hideLoading() {
     document.getElementById('loading-box').style.display = 'none';
+  }
+
+  function handleRevisionTypeChange() {
+    const revisionType = document.getElementById('revision_type').value;
+    const instructionsField = document.getElementById('revision_instructions');
+    const instructionsLabel = document.getElementById('instructions-label');
+    if (revisionType === 'change_keyword') {
+      instructionsField.style.display = 'none';
+      instructionsLabel.style.display = 'none';
+    } else {
+      instructionsField.style.display = 'block';
+      instructionsLabel.style.display = 'block';
+    }
   }
 
   async function submitKeyword(revisionInstructions, revisionType) {
@@ -210,6 +228,8 @@
   }
 
   function showReview() {
+    document.getElementById('revision_type').value = 'minor_edit';
+    handleRevisionTypeChange();
     document.getElementById('review-box').style.display  = 'block';
     document.getElementById('article-box').style.display = 'none';
   }
@@ -223,12 +243,16 @@
     const instructions = document.getElementById('revision_instructions').value.trim();
     const revisionType = document.getElementById('revision_type').value;
 
-    if (!instructions) { alert('Please describe what needs to be changed'); return; }
+    if (!instructions && revisionType !== 'change_keyword') {
+      alert('Please describe what needs to be changed');
+      return;
+    }
 
     if (revisionType === 'change_keyword') {
       document.getElementById('review-box').style.display  = 'none';
       document.getElementById('article-box').style.display = 'none';
       document.getElementById('keyword').value = '';
+      document.getElementById('operator_topic_notes').value = '';
       document.getElementById('step1-box').style.display   = 'block';
       return;
     }
