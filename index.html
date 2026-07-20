@@ -19,25 +19,38 @@
     #result-box{display:none;margin-top:20px;background:#E1F5EE;padding:16px;border-radius:8px}
     #loading-box{display:none;margin-top:20px;background:#f5f5f5;padding:20px;border-radius:8px;text-align:center}
     #loading-text{font-size:15px;color:#555;margin:0}
-    pre{white-space:pre-wrap;background:#f5f5f5;padding:16px;border-radius:6px;font-size:13px;max-height:500px;overflow-y:auto}
+    #article-display{background:#f5f5f5;padding:16px;border-radius:6px;font-size:14px;max-height:600px;overflow-y:auto;line-height:1.6}
     .cost{background:#EBF5FB;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .seo{background:#E1F5EE;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .eeat{background:#F3E8FF;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .unique{background:#FFF3CD;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     a{color:#0F6E56;font-weight:bold}
     label{font-size:13px;font-weight:500;color:#333;margin-top:8px;display:block}
+    table{border-collapse:collapse;width:100%;margin-top:10px;font-size:13px}
+    th{background:#1F4E79;color:white;padding:8px;text-align:left}
+    td{padding:8px;border:1px solid #ccc;vertical-align:top}
+    tr:nth-child(even){background:#f9f9f9}
+    #summary-table{margin:10px 0}
+    .section-divider{border:none;border-top:1px solid #eee;margin:15px 0}
+    .optional-label{color:#888;font-weight:normal;font-size:12px;margin-left:4px}
+    .info-label{color:#185FA5;font-size:12px;margin:4px 0 8px 0;display:block}
+    #revision-instructions-box{display:none;margin-top:8px}
+    .revision-type-btn{padding:10px 20px;margin:5px;font-size:14px;cursor:pointer;border:2px solid #ccc;border-radius:6px;background:white;color:#333}
+    .revision-type-btn.selected{border-color:#185FA5;background:#EBF5FB;color:#185FA5;font-weight:bold}
+    #revision-type-buttons{margin:10px 0}
   </style>
 </head>
 <body>
 
 <h2>SEO Content Agent</h2>
 
-<!-- STEP 1 - KEYWORD INPUT -->
 <div id="step1-box">
   <h3>Step 1 - Start a New Article</h3>
-  <label>Target Keyword (required)</label>
+  <label>Client Website URL (required)</label>
+  <input id="client_website" type="url" placeholder="e.g. https://www.runforlife.com"/>
+   <label>Target Keyword (required)</label>
   <input id="keyword" type="text" placeholder="e.g. best trail running shoes for flat feet"/>
-  <label>Content Topic Ideas / Notes (optional)</label>
+  <label>Content Topic Ideas / Notes <span class="optional-label">(optional)</span></label>
   <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $150, target beginners"></textarea>
   <label>Target Country</label>
   <select id="target_country">
@@ -48,45 +61,66 @@
     <option value="ca">Canada</option>
     <option value="lk">Sri Lanka</option>
   </select>
+  <label>English Variety</label>
+  <select id="english_variety">
+    <option value="American">American English</option>
+    <option value="British">British English</option>
+    <option value="Australian">Australian English</option>
+    <option value="Canadian">Canadian English</option>
+  </select>
+  <hr class="section-divider">
   <button class="submit" onclick="submitKeyword()">Research and Generate Article</button>
 </div>
 
-<!-- LOADING - outside step1-box so form hides completely -->
 <div id="loading-box">
   <p id="loading-text">Running full pipeline... this takes 3-5 minutes</p>
 </div>
 
-<!-- STEP 2 - ARTICLE DISPLAY -->
 <div id="article-box">
   <h3>Step 2 - Generated Article</h3>
   <div class="unique" id="unique-display"></div>
   <div class="cost" id="cost-display"></div>
   <div class="seo" id="seo-display"></div>
   <div class="eeat" id="eeat-display"></div>
+  <h3>Article Summary</h3>
+  <div id="summary-table"></div>
   <h3>Article</h3>
-  <pre id="article-display"></pre>
+  <div id="article-display"></div>
   <h3>Step 3 - Human Review</h3>
   <p>Read the article and review all scores above. Is it acceptable to publish?</p>
   <button class="approve" onclick="showApprove()">Approve and Save to Google Docs</button>
   <button class="reject" onclick="showReview()">Request Revisions</button>
 </div>
 
-<!-- REVIEW FORM -->
 <div id="review-box">
   <h3>Request Revisions</h3>
-  <label id="instructions-label">Revision Instructions (required)</label>
-  <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing matcha vs sencha. Make the tone less formal."></textarea>
-  <label>Revision Type (required)</label>
-  <select id="revision_type" onchange="handleRevisionTypeChange()">
-    <option value="minor_edit">Minor edit (tone/length) - only rewrites the article, no Ahrefs calls</option>
-    <option value="new_angle">New angle needed - regenerates unique factor, brief and article</option>
-    <option value="change_keyword">Change keyword - restarts entire pipeline</option>
-  </select>
+  <p>Select the type of revision needed:</p>
+
+  <div id="revision-type-buttons">
+    <button class="revision-type-btn" onclick="selectRevisionType('minor_edit', this)">Minor Edit</button>
+    <button class="revision-type-btn" onclick="selectRevisionType('new_angle', this)">New Angle</button>
+    <button class="revision-type-btn" onclick="selectRevisionType('less_ai', this)">Make it Less AI</button>
+  </div>
+
+  <div id="revision-instructions-box" style="display:none">
+    <label>Revision Instructions (required)</label>
+    <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing matcha vs sencha. Make the tone less formal."></textarea>
+  </div>
+
+  <div id="new-angle-box" style="display:none;background:#E8F4FD;padding:12px;border-radius:6px;margin:10px 0;border:1px solid #185FA5">
+    <label style="color:#185FA5;font-weight:600">Your Unique Angle / Human Insight (required)</label>
+    <p style="font-size:12px;color:#555;margin:4px 0 8px 0">Provide a unique insight only you or your client could know - first-hand data, a contrarian opinion with evidence, a customer observation, or an angle no competitor has covered. This becomes the core of the new article.</p>
+    <textarea id="new_angle_instructions" placeholder="e.g. Based on our customer data, 73% of beginners quit crochet in week 2 because of tension issues - not complexity. This is the angle no competitor is addressing."></textarea>
+  </div>
+
+  <input type="hidden" id="revision_type" value=""/>
+
+  <br/>
   <button class="resubmit" onclick="submitRevision()">Submit Revision Request</button>
   <button class="submit" onclick="hideReview()">Go back to article</button>
+  <button class="reject" onclick="changeKeyword()">Change Keyword - Start Over</button>
 </div>
 
-<!-- RESULT -->
 <div id="result-box">
   <h3>Article saved to Google Docs</h3>
   <p id="doc-link"></p>
@@ -94,13 +128,46 @@
 </div>
 
 <script>
-  const WEBHOOK_URL = 'https://sharmini99.app.n8n.cloud/webhook/seo-agent';
-const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
+  const WEBHOOK_URL = 'https://n8n-fmid.srv1801788.hstgr.cloud/webhook/46f643b2-94e4-4361-9966-06a61fed2d66';
 
-  let currentData    = {};
-  let currentKeyword = '';
-  let currentNotes   = '';
-  let currentCountry = 'us';
+  let currentData       = {};
+  let currentKeyword    = '';
+  let currentNotes      = '';
+  let currentCountry    = 'us';
+  let currentEnglish    = 'American';
+  let currentClientName = '';
+
+  function getClientName(url) {
+    if (!url) return 'Client';
+    try {
+      const domain = new URL(url).hostname
+        .replace('www.', '')
+        .split('.')[0];
+      return domain.charAt(0).toUpperCase() + domain.slice(1);
+    } catch(e) {
+      return 'Client';
+    }
+  }
+
+  function selectRevisionType(type, btn) {
+    document.getElementById('revision_type').value = type;
+    document.querySelectorAll('.revision-type-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+
+    // Hide all input boxes first
+    document.getElementById('revision-instructions-box').style.display = 'none';
+    document.getElementById('new-angle-box').style.display = 'none';
+    document.getElementById('revision_instructions').value = '';
+    document.getElementById('new_angle_instructions').value = '';
+
+    // Show relevant box based on type
+    if (type === 'minor_edit') {
+      document.getElementById('revision-instructions-box').style.display = 'block';
+    } else if (type === 'new_angle') {
+      document.getElementById('new-angle-box').style.display = 'block';
+    }
+    // less_ai shows nothing - no input needed
+  }
 
   function showLoading(message) {
     document.getElementById('step1-box').style.display   = 'none';
@@ -115,51 +182,35 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     document.getElementById('loading-box').style.display = 'none';
   }
 
-  function handleRevisionTypeChange() {
-    const revisionType = document.getElementById('revision_type').value;
-    const instructionsField = document.getElementById('revision_instructions');
-    const instructionsLabel = document.getElementById('instructions-label');
-    if (revisionType === 'change_keyword') {
-      instructionsField.style.display = 'none';
-      instructionsLabel.style.display = 'none';
-    } else {
-      instructionsField.style.display = 'block';
-      instructionsLabel.style.display = 'block';
-    }
-  }
-
-  async function submitKeyword(revisionInstructions, revisionType) {
-    const keyword = revisionInstructions
-      ? currentKeyword
-      : document.getElementById('keyword').value.trim();
-    const notes = revisionInstructions
-      ? currentNotes
-      : document.getElementById('operator_topic_notes').value.trim();
-    const country = revisionInstructions
-      ? currentCountry
-      : document.getElementById('target_country').value;
+  async function submitKeyword() {
+    const keyword       = document.getElementById('keyword').value.trim();
+    const notes         = document.getElementById('operator_topic_notes').value.trim();
+    const country       = document.getElementById('target_country').value;
+    const english       = document.getElementById('english_variety').value;
+    const clientWebsite = document.getElementById('client_website').value.trim();
 
     if (!keyword) { alert('Please enter a keyword first'); return; }
 
-    currentKeyword = keyword;
-    currentNotes   = notes;
-    currentCountry = country;
+    currentKeyword    = keyword;
+    currentNotes      = notes;
+    currentCountry    = country;
+    currentEnglish    = english;
+    currentClientName = getClientName(clientWebsite);
 
     showLoading('Running full pipeline... this takes 3-5 minutes');
-
-    let promptNotes = notes;
-    if (revisionInstructions && revisionType === 'new_angle') {
-      promptNotes = notes + '\n\nNEW ANGLE INSTRUCTIONS (create a completely different angle): ' + revisionInstructions;
-    }
 
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action:               'generate',
           keyword:              keyword,
-          operator_topic_notes: promptNotes,
-          target_country:       country
+          operator_topic_notes: notes,
+          target_country:       country,
+          english_variety:      english,
+          client_website:       clientWebsite,
+          client_name:          currentClientName
         })
       });
 
@@ -218,7 +269,24 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
       ' | Authority: ' + (eeat.authoritativeness || 0) +
       ' | Trust: ' + (eeat.trustworthiness || 0);
 
-    document.getElementById('article-display').innerText = item.article || '';
+    const contentGaps = (item.content_gaps || '').substring(0, 300) + '...';
+    document.getElementById('summary-table').innerHTML = `
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td><strong>Keyword</strong></td><td>${item.keyword || ''}</td></tr>
+        <tr><td><strong>Search Volume</strong></td><td>${item.search_volume || ''}</td></tr>
+        <tr><td><strong>Keyword Difficulty</strong></td><td>${item.keyword_difficulty || ''}</td></tr>
+        <tr><td><strong>Secondary Keywords</strong></td><td>${item.secondary_keywords || ''}</td></tr>
+        <tr><td><strong>Unique Factor</strong></td><td>${item.unique_factor || ''}</td></tr>
+        <tr><td><strong>Internal Links Used</strong></td><td>${item.internal_links_used || 'None'}</td></tr>
+        <tr><td><strong>External Links Used</strong></td><td>${item.external_links_found || 'None'}</td></tr>
+        <tr><td><strong>Content Gaps</strong></td><td>${contentGaps}</td></tr>
+        <tr><td><strong>E-E-A-T Overall</strong></td><td>${(item.eeat_score || {}).overall || ''}/10</td></tr>
+        <tr><td><strong>Total Cost</strong></td><td>${item.article_cost || ''}</td></tr>
+      </table>
+    `;
+
+    document.getElementById('article-display').innerHTML = item.article || '';
   }
 
   function showApprove() {
@@ -228,8 +296,14 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
   }
 
   function showReview() {
-    document.getElementById('revision_type').value = 'minor_edit';
-    handleRevisionTypeChange();
+    // Reset revision type selection
+    document.getElementById('revision_type').value = '';
+    document.querySelectorAll('.revision-type-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('revision-instructions-box').style.display = 'none';
+    document.getElementById('new-angle-box').style.display = 'none';
+    document.getElementById('revision_instructions').value = '';
+    document.getElementById('new_angle_instructions') && (document.getElementById('new_angle_instructions').value = '');
+
     document.getElementById('review-box').style.display  = 'block';
     document.getElementById('article-box').style.display = 'none';
   }
@@ -239,33 +313,52 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     document.getElementById('article-box').style.display = 'block';
   }
 
-  async function submitRevision() {
-    const instructions = document.getElementById('revision_instructions').value.trim();
-    const revisionType = document.getElementById('revision_type').value;
+  function changeKeyword() {
+    document.getElementById('review-box').style.display   = 'none';
+    document.getElementById('article-box').style.display  = 'none';
+    document.getElementById('keyword').value              = '';
+    document.getElementById('operator_topic_notes').value = '';
+    document.getElementById('client_website').value       = '';
+    document.getElementById('step1-box').style.display    = 'block';
+    currentKeyword    = '';
+    currentNotes      = '';
+    currentCountry    = 'us';
+    currentEnglish    = 'American';
+    currentClientName = '';
+    currentData       = {};
+  }
 
-    if (!instructions && revisionType !== 'change_keyword') {
+  async function submitRevision() {
+    const revisionType = document.getElementById('revision_type').value;
+    const instructions = document.getElementById('revision_instructions').value.trim();
+
+    if (!revisionType) {
+      alert('Please select a revision type first');
+      return;
+    }
+
+    if (revisionType === 'minor_edit' && !instructions) {
       alert('Please describe what needs to be changed');
       return;
     }
 
-    if (revisionType === 'change_keyword') {
-      document.getElementById('review-box').style.display  = 'none';
-      document.getElementById('article-box').style.display = 'none';
-      document.getElementById('keyword').value = '';
-      document.getElementById('operator_topic_notes').value = '';
-      document.getElementById('step1-box').style.display   = 'block';
+    if (revisionType === 'new_angle') {
+      const newAngleInstructions = document.getElementById('new_angle_instructions').value.trim();
+      if (!newAngleInstructions) {
+        alert('Please provide your unique angle or human insight before submitting');
+        return;
+      }
+      hideReview();
+      await submitNewAngle(newAngleInstructions);
       return;
     }
 
-    document.getElementById('revision_instructions').value = '';
     hideReview();
 
     if (revisionType === 'minor_edit') {
       await submitMinorEdit(instructions);
-    } else if (revisionType === 'new_angle') {
-      await submitNewAngle(instructions);
-    } else {
-      await submitKeyword(instructions, revisionType);
+    } else if (revisionType === 'less_ai') {
+      await submitLessAI('');
     }
   }
 
@@ -273,22 +366,27 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     showLoading('Rewriting article... this takes about 30 seconds');
 
     try {
-      const res = await fetch(REVIEW_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          decision:              'minor_edit',
-          revision_type:         'minor_edit',
+          action:                'minor_edit',
           revision_instructions: instructions,
           keyword:               currentKeyword,
           article:               currentData.article              || '',
           unique_factor:         currentData.unique_factor        || '',
           content_brief:         currentData.content_brief        || '',
           content_gaps:          currentData.content_gaps         || '',
+          competitor_summary:    currentData.competitor_summary   || '',
           secondary_keywords:    currentData.secondary_keywords   || '',
           search_volume:         currentData.search_volume        || 0,
           keyword_difficulty:    currentData.keyword_difficulty   || 0,
           operator_topic_notes:  currentData.operator_topic_notes || '',
+          english_variety:       currentEnglish,
+          internal_link_1:       currentData.internal_link_1      || '',
+          internal_link_2:       currentData.internal_link_2      || '',
+          external_links_found:  currentData.external_links_found || '',
+          client_name:           currentClientName,
           seo_check:             currentData.seo_check            || {},
           eeat_score:            currentData.eeat_score           || {},
           article_cost:          currentData.article_cost         || '',
@@ -299,9 +397,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
       const raw = await res.text();
       let data;
-      try {
-        data = JSON.parse(raw);
-      } catch(e) {
+      try { data = JSON.parse(raw); } catch(e) {
         console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console.');
         hideLoading();
@@ -311,7 +407,6 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item;
-
       hideLoading();
       displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
@@ -328,12 +423,11 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     showLoading('Generating new angle... this takes about 2 minutes');
 
     try {
-      const res = await fetch(REVIEW_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          decision:              'new_angle',
-          revision_type:         'new_angle',
+          action:                'new_angle',
           revision_instructions: instructions,
           keyword:               currentKeyword,
           content_gaps:          currentData.content_gaps         || '',
@@ -342,6 +436,10 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
           search_volume:         currentData.search_volume        || 0,
           keyword_difficulty:    currentData.keyword_difficulty   || 0,
           operator_topic_notes:  currentData.operator_topic_notes || '',
+          english_variety:       currentEnglish,
+          internal_link_1:       currentData.internal_link_1      || '',
+          internal_link_2:       currentData.internal_link_2      || '',
+          client_name:           currentClientName,
           article:               currentData.article              || '',
           unique_factor:         currentData.unique_factor        || '',
           content_brief:         currentData.content_brief        || '',
@@ -355,9 +453,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
       const raw = await res.text();
       let data;
-      try {
-        data = JSON.parse(raw);
-      } catch(e) {
+      try { data = JSON.parse(raw); } catch(e) {
         console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console.');
         hideLoading();
@@ -367,7 +463,61 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item;
+      hideLoading();
+      displayArticle(item);
+      document.getElementById('article-box').style.display = 'block';
 
+    } catch(e) {
+      console.error(e);
+      alert('Something went wrong. Try again.');
+      hideLoading();
+      document.getElementById('article-box').style.display = 'block';
+    }
+  }
+
+  async function submitLessAI(instructions) {
+    showLoading('Running humanizer to reduce AI detection... this takes about 1-2 minutes');
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action:                'less_ai',
+          revision_instructions: instructions,
+          keyword:               currentKeyword,
+          article:               currentData.article              || '',
+          unique_factor:         currentData.unique_factor        || '',
+          content_brief:         currentData.content_brief        || '',
+          content_gaps:          currentData.content_gaps         || '',
+          secondary_keywords:    currentData.secondary_keywords   || '',
+          search_volume:         currentData.search_volume        || 0,
+          keyword_difficulty:    currentData.keyword_difficulty   || 0,
+          operator_topic_notes:  currentData.operator_topic_notes || '',
+          english_variety:       currentEnglish,
+          internal_link_1:       currentData.internal_link_1      || '',
+          internal_link_2:       currentData.internal_link_2      || '',
+          client_name:           currentClientName,
+          seo_check:             currentData.seo_check            || {},
+          eeat_score:            currentData.eeat_score           || {},
+          article_cost:          currentData.article_cost         || '',
+          inputTokens:           currentData.inputTokens          || 0,
+          outputTokens:          currentData.outputTokens         || 0
+        })
+      });
+
+      const raw = await res.text();
+      let data;
+      try { data = JSON.parse(raw); } catch(e) {
+        console.error('JSON parse error:', raw.substring(0, 500));
+        alert('Response parsing error. Check console.');
+        hideLoading();
+        document.getElementById('article-box').style.display = 'block';
+        return;
+      }
+
+      const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
+      currentData = item;
       hideLoading();
       displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
@@ -384,12 +534,11 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
     showLoading('Saving to Google Docs...');
 
     try {
-      const res = await fetch(REVIEW_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          decision:              'approved',
-          revision_type:         'approved',
+          action:                'approved',
           keyword:               currentKeyword,
           article:               currentData.article              || '',
           unique_factor:         currentData.unique_factor        || '',
@@ -399,6 +548,12 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
           search_volume:         currentData.search_volume        || 0,
           keyword_difficulty:    currentData.keyword_difficulty   || 0,
           operator_topic_notes:  currentData.operator_topic_notes || '',
+          competitor_summary:    currentData.competitor_summary   || '',
+          internal_link_1:       currentData.internal_link_1      || '',
+          internal_link_2:       currentData.internal_link_2      || '',
+          internal_links_used:   currentData.internal_links_used  || '',
+          external_links_found:  currentData.external_links_found || '',
+          client_name:           currentClientName,
           seo_check:             currentData.seo_check            || {},
           eeat_score:            currentData.eeat_score           || {},
           article_cost:          currentData.article_cost         || '',
@@ -409,9 +564,7 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
 
       const raw = await res.text();
       let data;
-      try {
-        data = JSON.parse(raw);
-      } catch(e) {
+      try { data = JSON.parse(raw); } catch(e) {
         console.error('JSON parse error on approval:', raw.substring(0, 500));
         alert('Response parsing error. Check console.');
         hideLoading();
@@ -442,17 +595,20 @@ const REVIEW_URL  = 'https://sharmini99.app.n8n.cloud/webhook/seo-review';
   }
 
   function startOver() {
-    document.getElementById('keyword').value = '';
+    document.getElementById('keyword').value              = '';
     document.getElementById('operator_topic_notes').value = '';
+    document.getElementById('client_website').value       = '';
     document.getElementById('article-box').style.display  = 'none';
     document.getElementById('review-box').style.display   = 'none';
     document.getElementById('result-box').style.display   = 'none';
     document.getElementById('loading-box').style.display  = 'none';
     document.getElementById('step1-box').style.display    = 'block';
-    currentKeyword = '';
-    currentNotes   = '';
-    currentCountry = 'us';
-    currentData    = {};
+    currentKeyword    = '';
+    currentNotes      = '';
+    currentCountry    = 'us';
+    currentEnglish    = 'American';
+    currentClientName = '';
+    currentData       = {};
   }
 </script>
 </body>
