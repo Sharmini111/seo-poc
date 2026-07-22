@@ -19,7 +19,9 @@
     #result-box{display:none;margin-top:20px;background:#E1F5EE;padding:16px;border-radius:8px}
     #loading-box{display:none;margin-top:20px;background:#f5f5f5;padding:20px;border-radius:8px;text-align:center}
     #loading-text{font-size:15px;color:#555;margin:0}
-    #article-display{background:#f5f5f5;padding:16px;border-radius:6px;font-size:14px;max-height:600px;overflow-y:auto;line-height:1.6}
+    #article-display{background:#f5f5f5;padding:16px;border-radius:6px;font-size:14px;max-height:600px;overflow-y:auto;line-height:1.6;color:#000000;}
+    #article-display h1,#article-display h2,#article-display h3,#article-display p,#article-display strong{color:#000000;font-family:Arial,sans-serif;}
+    #article-display a{color:#0F6E56;font-weight:bold;}
     .cost{background:#EBF5FB;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .seo{background:#E1F5EE;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
     .eeat{background:#F3E8FF;padding:10px;border-radius:6px;margin:10px 0;font-size:13px}
@@ -38,6 +40,11 @@
     .revision-type-btn{padding:10px 20px;margin:5px;font-size:14px;cursor:pointer;border:2px solid #ccc;border-radius:6px;background:white;color:#333}
     .revision-type-btn.selected{border-color:#185FA5;background:#EBF5FB;color:#185FA5;font-weight:bold}
     #revision-type-buttons{margin:10px 0}
+    .page-item{padding:8px;border-bottom:1px solid #eee;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+    .page-item:hover{background:#f0f7ff}
+    .page-item input[type="checkbox"]{width:auto;margin:2px 0 0 0;flex-shrink:0}
+    .page-item label{font-size:12px;color:#333;cursor:pointer;margin:0;word-break:break-all}
+    #selected-links-display{margin-top:8px;font-size:12px;color:#0F6E56;font-weight:500}
   </style>
 </head>
 <body>
@@ -46,12 +53,34 @@
 
 <div id="step1-box">
   <h3>Step 1 - Start a New Article</h3>
-  <label>Client Website URL (required)</label>
-  <input id="client_website" type="url" placeholder="e.g. https://www.runforlife.com"/>
-   <label>Target Keyword (required)</label>
-  <input id="keyword" type="text" placeholder="e.g. best trail running shoes for flat feet"/>
+  <label>Client Website URL <span class="optional-label">(optional — used for doc title and internal links)</span></label>
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="client_website" type="url" placeholder="e.g. https://www.inkpro.club/" style="flex:1;margin:0"/>
+    <button class="submit" onclick="fetchPages()" id="fetch-btn" style="white-space:nowrap;margin:0;padding:10px 16px">Fetch Pages</button>
+  </div>
+
+  <div id="pages-box" style="display:none;margin-top:10px">
+    <label>Select Internal Links <span class="optional-label">(pick up to 2 — click to select)</span></label>
+    <div id="pages-list" style="background:white;border:1px solid #ccc;border-radius:6px;max-height:220px;overflow-y:auto;margin:6px 0"></div>
+    <div id="selected-links-display"></div>
+    <label style="margin-top:10px">Or enter manually <span class="optional-label">(optional)</span></label>
+    <input id="manual_link_1" type="url" placeholder="Internal link 1 URL"/>
+    <input id="manual_link_2" type="url" placeholder="Internal link 2 URL"/>
+  </div>
+
+  <label>Target Keyword (required)</label>
+  <input id="keyword" type="text" placeholder="e.g. best rotary tattoo machine for beginners"/>
   <label>Content Topic Ideas / Notes <span class="optional-label">(optional)</span></label>
-  <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $150, target beginners"></textarea>
+  <textarea id="operator_topic_notes" placeholder="e.g. focus on wireless machines, target professional artists"></textarea>
+  <label>Target Word Count <span class="optional-label">(optional — default 1300)</span></label>
+  <select id="word_count">
+  <option value="1000">1000 words</option>
+  <option value="1300" selected>1300 words (default)</option>
+  <option value="1500">1500 words</option>
+  <option value="2000">2000 words</option>
+  <option value="2500">2500 words</option>
+  <option value="3000">3000 words</option>
+  </select>
   <label>Target Country</label>
   <select id="target_country">
     <option value="us">United States</option>
@@ -95,26 +124,21 @@
 <div id="review-box">
   <h3>Request Revisions</h3>
   <p>Select the type of revision needed:</p>
-
   <div id="revision-type-buttons">
     <button class="revision-type-btn" onclick="selectRevisionType('minor_edit', this)">Minor Edit</button>
     <button class="revision-type-btn" onclick="selectRevisionType('new_angle', this)">New Angle</button>
     <button class="revision-type-btn" onclick="selectRevisionType('less_ai', this)">Make it Less AI</button>
   </div>
-
   <div id="revision-instructions-box" style="display:none">
     <label>Revision Instructions (required)</label>
-    <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing matcha vs sencha. Make the tone less formal."></textarea>
+    <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing rotary vs coil machines."></textarea>
   </div>
-
   <div id="new-angle-box" style="display:none;background:#E8F4FD;padding:12px;border-radius:6px;margin:10px 0;border:1px solid #185FA5">
     <label style="color:#185FA5;font-weight:600">Your Unique Angle / Human Insight (required)</label>
-    <p style="font-size:12px;color:#555;margin:4px 0 8px 0">Provide a unique insight only you or your client could know - first-hand data, a contrarian opinion with evidence, a customer observation, or an angle no competitor has covered. This becomes the core of the new article.</p>
-    <textarea id="new_angle_instructions" placeholder="e.g. Based on our customer data, 73% of beginners quit crochet in week 2 because of tension issues - not complexity. This is the angle no competitor is addressing."></textarea>
+    <p style="font-size:12px;color:#555;margin:4px 0 8px 0">Provide a unique insight only you or your client could know — first-hand data, a contrarian opinion with evidence, a customer observation, or an angle no competitor has covered.</p>
+    <textarea id="new_angle_instructions" placeholder="e.g. Based on our customer feedback, 80% of beginners prefer pen-style rotary machines because of the lighter weight..."></textarea>
   </div>
-
   <input type="hidden" id="revision_type" value=""/>
-
   <br/>
   <button class="resubmit" onclick="submitRevision()">Submit Revision Request</button>
   <button class="submit" onclick="hideReview()">Go back to article</button>
@@ -136,37 +160,131 @@
   let currentCountry    = 'us';
   let currentEnglish    = 'American';
   let currentClientName = '';
+  let fetchedPages      = [];
+  let selectedLinks     = [];
 
   function getClientName(url) {
     if (!url) return 'Client';
     try {
-      const domain = new URL(url).hostname
-        .replace('www.', '')
-        .split('.')[0];
+      const domain = new URL(url).hostname.replace('www.', '').split('.')[0];
       return domain.charAt(0).toUpperCase() + domain.slice(1);
-    } catch(e) {
-      return 'Client';
+    } catch(e) { return 'Client'; }
+  }
+
+  async function fetchPages() {
+    const clientWebsite = document.getElementById('client_website').value.trim();
+    if (!clientWebsite) {
+      alert('Please enter a client website URL first');
+      return;
     }
+    const btn = document.getElementById('fetch-btn');
+    btn.textContent = 'Fetching...';
+    btn.disabled = true;
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'fetch_links', client_website: clientWebsite })
+      });
+      const raw = await res.text();
+      let data;
+      try { data = JSON.parse(raw); } catch(e) {
+        alert('Could not fetch pages. Enter links manually.');
+        document.getElementById('pages-box').style.display = 'block';
+        return;
+      }
+      const result = Array.isArray(data) ? (data[0].json || data[0]) : data;
+      fetchedPages = result.pages || [];
+      if (fetchedPages.length === 0) {
+        alert('No pages found for this website. Enter links manually below.');
+        document.getElementById('pages-box').style.display = 'block';
+        return;
+      }
+      renderPageList();
+      document.getElementById('pages-box').style.display = 'block';
+    } catch(e) {
+      console.error(e);
+      alert('Could not fetch pages. Enter links manually below.');
+      document.getElementById('pages-box').style.display = 'block';
+    } finally {
+      btn.textContent = 'Fetch Pages';
+      btn.disabled = false;
+    }
+  }
+
+  function renderPageList() {
+    const list = document.getElementById('pages-list');
+    list.innerHTML = '';
+    selectedLinks = [];
+    updateSelectedDisplay();
+    fetchedPages.forEach((page, i) => {
+      const div = document.createElement('div');
+      div.className = 'page-item';
+      div.id = 'page-item-' + i;
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = 'page_' + i;
+      cb.value = page.url;
+      cb.addEventListener('change', function() {
+        toggleLink(page.url, this.checked, this);
+      });
+      const lbl = document.createElement('label');
+      lbl.htmlFor = 'page_' + i;
+      lbl.textContent = page.label;
+      div.appendChild(cb);
+      div.appendChild(lbl);
+      div.addEventListener('click', function(e) {
+        if (e.target !== cb) cb.click();
+      });
+      list.appendChild(div);
+    });
+  }
+
+  function toggleLink(url, checked, checkbox) {
+    if (checked) {
+      if (selectedLinks.length >= 2) {
+        checkbox.checked = false;
+        alert('You can only select up to 2 internal links.');
+        return;
+      }
+      selectedLinks.push(url);
+    } else {
+      selectedLinks = selectedLinks.filter(u => u !== url);
+    }
+    updateSelectedDisplay();
+  }
+
+  function updateSelectedDisplay() {
+    const display = document.getElementById('selected-links-display');
+    if (selectedLinks.length === 0) {
+      display.innerHTML = '';
+    } else {
+      display.innerHTML = '<strong>Selected:</strong><br>' +
+        selectedLinks.map((u, i) => (i+1) + '. ' + u).join('<br>');
+    }
+  }
+
+  function getSelectedInternalLinks() {
+    const manual1 = document.getElementById('manual_link_1').value.trim();
+    const manual2 = document.getElementById('manual_link_2').value.trim();
+    const link1 = selectedLinks[0] || manual1 || '';
+    const link2 = selectedLinks[1] || manual2 || '';
+    return { link1, link2 };
   }
 
   function selectRevisionType(type, btn) {
     document.getElementById('revision_type').value = type;
     document.querySelectorAll('.revision-type-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
-
-    // Hide all input boxes first
     document.getElementById('revision-instructions-box').style.display = 'none';
     document.getElementById('new-angle-box').style.display = 'none';
     document.getElementById('revision_instructions').value = '';
     document.getElementById('new_angle_instructions').value = '';
-
-    // Show relevant box based on type
     if (type === 'minor_edit') {
       document.getElementById('revision-instructions-box').style.display = 'block';
     } else if (type === 'new_angle') {
       document.getElementById('new-angle-box').style.display = 'block';
     }
-    // less_ai shows nothing - no input needed
   }
 
   function showLoading(message) {
@@ -188,51 +306,45 @@
     const country       = document.getElementById('target_country').value;
     const english       = document.getElementById('english_variety').value;
     const clientWebsite = document.getElementById('client_website').value.trim();
-
     if (!keyword) { alert('Please enter a keyword first'); return; }
-
     currentKeyword    = keyword;
     currentNotes      = notes;
     currentCountry    = country;
     currentEnglish    = english;
     currentClientName = getClientName(clientWebsite);
-
+    const { link1, link2 } = getSelectedInternalLinks();
     showLoading('Running full pipeline... this takes 3-5 minutes');
-
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:               'generate',
-          keyword:              keyword,
-          operator_topic_notes: notes,
-          target_country:       country,
-          english_variety:      english,
-          client_website:       clientWebsite,
-          client_name:          currentClientName
-        })
+  action:               'generate',
+  keyword:              keyword,
+  operator_topic_notes: notes,
+  target_country:       country,
+  english_variety:      english,
+  client_website:       clientWebsite,
+  client_name:          currentClientName,
+  internal_link_1:      link1,
+  internal_link_2:      link2,
+  word_count:           document.getElementById('word_count').value || '1300'
+})
       });
-
       const raw = await res.text();
       let data;
-      try {
-        data = JSON.parse(raw);
-      } catch(e) {
+      try { data = JSON.parse(raw); } catch(e) {
         console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console for details.');
         hideLoading();
         document.getElementById('step1-box').style.display = 'block';
         return;
       }
-
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item;
-
       hideLoading();
       displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
-
     } catch(e) {
       console.error(e);
       alert('Something went wrong. Check your webhook URL and try again.');
@@ -244,14 +356,12 @@
   function displayArticle(item) {
     document.getElementById('unique-display').innerHTML =
       '<strong>Unique Factor:</strong> ' + (item.unique_factor || 'N/A');
-
     document.getElementById('cost-display').innerHTML =
       '<strong>Cost:</strong> ' + (item.article_cost || '$0.00') +
       ' | Claude: ' + (item.claude_cost || '$0.00') +
       ' | Ahrefs: ' + (item.ahrefs_cost || '$0.00') +
       ' | Input tokens: ' + (item.inputTokens || 0) +
       ' | Output tokens: ' + (item.outputTokens || 0);
-
     const seo = item.seo_check || {};
     document.getElementById('seo-display').innerHTML =
       '<strong>SEO Check:</strong>' +
@@ -259,7 +369,6 @@
       ' | Keyword in heading: ' + (seo.keyword_in_heading ? 'Yes' : 'No') +
       ' | Density: ' + (seo.keyword_density || 'N/A') +
       ' | Word count: ' + (seo.total_words || 0);
-
     const eeat = item.eeat_score || {};
     document.getElementById('eeat-display').innerHTML =
       '<strong>E-E-A-T Score:</strong>' +
@@ -268,7 +377,6 @@
       ' | Expertise: ' + (eeat.expertise || 0) +
       ' | Authority: ' + (eeat.authoritativeness || 0) +
       ' | Trust: ' + (eeat.trustworthiness || 0);
-
     const contentGaps = (item.content_gaps || '').substring(0, 300) + '...';
     document.getElementById('summary-table').innerHTML = `
       <table>
@@ -285,25 +393,20 @@
         <tr><td><strong>Total Cost</strong></td><td>${item.article_cost || ''}</td></tr>
       </table>
     `;
-
     document.getElementById('article-display').innerHTML = item.article || '';
   }
 
   function showApprove() {
-    if (confirm('Approve this article and save to Google Docs?')) {
-      submitApproval();
-    }
+    if (confirm('Approve this article and save to Google Docs?')) { submitApproval(); }
   }
 
   function showReview() {
-    // Reset revision type selection
     document.getElementById('revision_type').value = '';
     document.querySelectorAll('.revision-type-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('revision-instructions-box').style.display = 'none';
     document.getElementById('new-angle-box').style.display = 'none';
     document.getElementById('revision_instructions').value = '';
-    document.getElementById('new_angle_instructions') && (document.getElementById('new_angle_instructions').value = '');
-
+    document.getElementById('new_angle_instructions').value = '';
     document.getElementById('review-box').style.display  = 'block';
     document.getElementById('article-box').style.display = 'none';
   }
@@ -319,42 +422,32 @@
     document.getElementById('keyword').value              = '';
     document.getElementById('operator_topic_notes').value = '';
     document.getElementById('client_website').value       = '';
+    document.getElementById('pages-box').style.display    = 'none';
+    document.getElementById('pages-list').innerHTML       = '';
+    document.getElementById('selected-links-display').innerHTML = '';
     document.getElementById('step1-box').style.display    = 'block';
-    currentKeyword    = '';
-    currentNotes      = '';
-    currentCountry    = 'us';
-    currentEnglish    = 'American';
-    currentClientName = '';
-    currentData       = {};
+    currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
+    currentEnglish = 'American'; currentClientName = '';
+    currentData = {}; fetchedPages = []; selectedLinks = [];
   }
 
   async function submitRevision() {
     const revisionType = document.getElementById('revision_type').value;
     const instructions = document.getElementById('revision_instructions').value.trim();
-
-    if (!revisionType) {
-      alert('Please select a revision type first');
-      return;
-    }
-
+    if (!revisionType) { alert('Please select a revision type first'); return; }
     if (revisionType === 'minor_edit' && !instructions) {
-      alert('Please describe what needs to be changed');
-      return;
+      alert('Please describe what needs to be changed'); return;
     }
-
     if (revisionType === 'new_angle') {
       const newAngleInstructions = document.getElementById('new_angle_instructions').value.trim();
       if (!newAngleInstructions) {
-        alert('Please provide your unique angle or human insight before submitting');
-        return;
+        alert('Please provide your unique angle or human insight before submitting'); return;
       }
       hideReview();
       await submitNewAngle(newAngleInstructions);
       return;
     }
-
     hideReview();
-
     if (revisionType === 'minor_edit') {
       await submitMinorEdit(instructions);
     } else if (revisionType === 'less_ai') {
@@ -364,7 +457,6 @@
 
   async function submitMinorEdit(instructions) {
     showLoading('Rewriting article... this takes about 30 seconds');
-
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -383,6 +475,7 @@
           keyword_difficulty:    currentData.keyword_difficulty   || 0,
           operator_topic_notes:  currentData.operator_topic_notes || '',
           english_variety:       currentEnglish,
+          word_count: currentData.word_count || '1300',
           internal_link_1:       currentData.internal_link_1      || '',
           internal_link_2:       currentData.internal_link_2      || '',
           external_links_found:  currentData.external_links_found || '',
@@ -394,34 +487,23 @@
           outputTokens:          currentData.outputTokens         || 0
         })
       });
-
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        console.error('JSON parse error:', raw.substring(0, 500));
-        alert('Response parsing error. Check console.');
-        hideLoading();
-        document.getElementById('article-box').style.display = 'block';
-        return;
+        alert('Response parsing error.'); hideLoading();
+        document.getElementById('article-box').style.display = 'block'; return;
       }
-
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
-      currentData = item;
-      hideLoading();
-      displayArticle(item);
+      currentData = item; hideLoading(); displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
-
     } catch(e) {
-      console.error(e);
-      alert('Something went wrong. Try again.');
-      hideLoading();
-      document.getElementById('article-box').style.display = 'block';
+      console.error(e); alert('Something went wrong. Try again.');
+      hideLoading(); document.getElementById('article-box').style.display = 'block';
     }
   }
 
   async function submitNewAngle(instructions) {
     showLoading('Generating new angle... this takes about 2 minutes');
-
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -440,6 +522,7 @@
           internal_link_1:       currentData.internal_link_1      || '',
           internal_link_2:       currentData.internal_link_2      || '',
           client_name:           currentClientName,
+          word_count: currentData.word_count || '1300',
           article:               currentData.article              || '',
           unique_factor:         currentData.unique_factor        || '',
           content_brief:         currentData.content_brief        || '',
@@ -450,34 +533,23 @@
           outputTokens:          currentData.outputTokens         || 0
         })
       });
-
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        console.error('JSON parse error:', raw.substring(0, 500));
-        alert('Response parsing error. Check console.');
-        hideLoading();
-        document.getElementById('article-box').style.display = 'block';
-        return;
+        alert('Response parsing error.'); hideLoading();
+        document.getElementById('article-box').style.display = 'block'; return;
       }
-
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
-      currentData = item;
-      hideLoading();
-      displayArticle(item);
+      currentData = item; hideLoading(); displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
-
     } catch(e) {
-      console.error(e);
-      alert('Something went wrong. Try again.');
-      hideLoading();
-      document.getElementById('article-box').style.display = 'block';
+      console.error(e); alert('Something went wrong. Try again.');
+      hideLoading(); document.getElementById('article-box').style.display = 'block';
     }
   }
 
   async function submitLessAI(instructions) {
     showLoading('Running humanizer to reduce AI detection... this takes about 1-2 minutes');
-
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -498,6 +570,7 @@
           internal_link_1:       currentData.internal_link_1      || '',
           internal_link_2:       currentData.internal_link_2      || '',
           client_name:           currentClientName,
+          word_count: currentData.word_count || '1300',
           seo_check:             currentData.seo_check            || {},
           eeat_score:            currentData.eeat_score           || {},
           article_cost:          currentData.article_cost         || '',
@@ -505,34 +578,23 @@
           outputTokens:          currentData.outputTokens         || 0
         })
       });
-
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        console.error('JSON parse error:', raw.substring(0, 500));
-        alert('Response parsing error. Check console.');
-        hideLoading();
-        document.getElementById('article-box').style.display = 'block';
-        return;
+        alert('Response parsing error.'); hideLoading();
+        document.getElementById('article-box').style.display = 'block'; return;
       }
-
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
-      currentData = item;
-      hideLoading();
-      displayArticle(item);
+      currentData = item; hideLoading(); displayArticle(item);
       document.getElementById('article-box').style.display = 'block';
-
     } catch(e) {
-      console.error(e);
-      alert('Something went wrong. Try again.');
-      hideLoading();
-      document.getElementById('article-box').style.display = 'block';
+      console.error(e); alert('Something went wrong. Try again.');
+      hideLoading(); document.getElementById('article-box').style.display = 'block';
     }
   }
 
   async function submitApproval() {
     showLoading('Saving to Google Docs...');
-
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -561,36 +623,25 @@
           outputTokens:          currentData.outputTokens         || 0
         })
       });
-
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        console.error('JSON parse error on approval:', raw.substring(0, 500));
-        alert('Response parsing error. Check console.');
-        hideLoading();
-        document.getElementById('article-box').style.display = 'block';
-        return;
+        alert('Response parsing error.'); hideLoading();
+        document.getElementById('article-box').style.display = 'block'; return;
       }
-
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
-
       hideLoading();
       document.getElementById('result-box').style.display = 'block';
-
       const docId  = item.docId  || '';
       const docUrl = docId
         ? 'https://docs.google.com/document/d/' + docId + '/edit'
         : (item.docUrl || '');
       const docTitle = item.docTitle || currentKeyword + ' Draft';
-
       document.getElementById('doc-link').innerHTML =
         '<a href="' + docUrl + '" target="_blank">Open Google Doc: ' + docTitle + '</a>';
-
     } catch(e) {
-      console.error(e);
-      alert('Something went wrong. Try again.');
-      hideLoading();
-      document.getElementById('article-box').style.display = 'block';
+      console.error(e); alert('Something went wrong. Try again.');
+      hideLoading(); document.getElementById('article-box').style.display = 'block';
     }
   }
 
@@ -598,17 +649,17 @@
     document.getElementById('keyword').value              = '';
     document.getElementById('operator_topic_notes').value = '';
     document.getElementById('client_website').value       = '';
+    document.getElementById('pages-box').style.display    = 'none';
+    document.getElementById('pages-list').innerHTML       = '';
+    document.getElementById('selected-links-display').innerHTML = '';
     document.getElementById('article-box').style.display  = 'none';
     document.getElementById('review-box').style.display   = 'none';
     document.getElementById('result-box').style.display   = 'none';
     document.getElementById('loading-box').style.display  = 'none';
     document.getElementById('step1-box').style.display    = 'block';
-    currentKeyword    = '';
-    currentNotes      = '';
-    currentCountry    = 'us';
-    currentEnglish    = 'American';
-    currentClientName = '';
-    currentData       = {};
+    currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
+    currentEnglish = 'American'; currentClientName = '';
+    currentData = {}; fetchedPages = []; selectedLinks = [];
   }
 </script>
 </body>
