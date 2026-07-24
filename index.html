@@ -40,11 +40,16 @@
     .revision-type-btn{padding:10px 20px;margin:5px;font-size:14px;cursor:pointer;border:2px solid #ccc;border-radius:6px;background:white;color:#333}
     .revision-type-btn.selected{border-color:#185FA5;background:#EBF5FB;color:#185FA5;font-weight:bold}
     #revision-type-buttons{margin:10px 0}
-    .page-item{padding:8px;border-bottom:1px solid #eee;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+    .link-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .link-row input{margin:0}
+    .link-row input.url-field{flex:2}
+    .link-row input.anchor-field{flex:1}
+    .link-box{background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:10px;margin:6px 0}
+    .link-box-label{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block}
+    .page-item{padding:6px 8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;cursor:pointer}
     .page-item:hover{background:#f0f7ff}
-    .page-item input[type="checkbox"]{width:auto;margin:2px 0 0 0;flex-shrink:0}
-    .page-item label{font-size:12px;color:#333;cursor:pointer;margin:0;word-break:break-all}
-    #selected-links-display{margin-top:8px;font-size:12px;color:#0F6E56;font-weight:500}
+    .page-item input[type="checkbox"]{width:auto;margin:0;flex-shrink:0}
+    .page-item label{font-size:12px;color:#333;cursor:pointer;margin:0;word-break:break-all;flex:1}
   </style>
 </head>
 <body>
@@ -53,33 +58,50 @@
 
 <div id="step1-box">
   <h3>Step 1 - Start a New Article</h3>
+
   <label>Client Website URL <span class="optional-label">(optional — used for doc title and internal links)</span></label>
   <div style="display:flex;gap:8px;align-items:center">
-    <input id="client_website" type="url" placeholder="e.g. https://www.inkpro.club/" style="flex:1;margin:0"/>
+    <input id="client_website" type="url" placeholder="e.g. https://www.leewarehouse.co.nz/" style="flex:1;margin:0"/>
     <button class="submit" onclick="fetchPages()" id="fetch-btn" style="white-space:nowrap;margin:0;padding:10px 16px">Fetch Pages</button>
   </div>
 
-  <div id="pages-box" style="display:none;margin-top:10px">
-    <label>Select Internal Links <span class="optional-label">(pick up to 2 — click to select)</span></label>
-    <div id="pages-list" style="background:white;border:1px solid #ccc;border-radius:6px;max-height:220px;overflow-y:auto;margin:6px 0"></div>
-    <div id="selected-links-display"></div>
-    <label style="margin-top:10px">Or enter manually <span class="optional-label">(optional)</span></label>
-    <input id="manual_link_1" type="url" placeholder="Internal link 1 URL"/>
-    <input id="manual_link_2" type="url" placeholder="Internal link 2 URL"/>
+  <!-- Pages list — shown after successful fetch -->
+  <div id="pages-box" style="display:none;margin-top:8px">
+    <label>Select up to 2 pages to use as internal links</label>
+    <div id="pages-list" style="background:white;border:1px solid #ccc;border-radius:6px;max-height:200px;overflow-y:auto;margin:6px 0"></div>
+  </div>
+
+  <!-- Internal link fields — hidden until fetch is attempted -->
+  <div id="internal-links-box" style="display:none;margin-top:10px">
+    <label>Internal Links <span class="optional-label">(select from list above or enter manually — include anchor text)</span></label>
+    <div class="link-box">
+      <span class="link-box-label">Internal Link 1</span>
+      <div class="link-row">
+        <input id="internal_link_1" type="url" placeholder="URL" class="url-field"/>
+        <input id="internal_anchor_1" type="text" placeholder="Anchor text" class="anchor-field"/>
+      </div>
+    </div>
+    <div class="link-box">
+      <span class="link-box-label">Internal Link 2</span>
+      <div class="link-row">
+        <input id="internal_link_2" type="url" placeholder="URL" class="url-field"/>
+        <input id="internal_anchor_2" type="text" placeholder="Anchor text" class="anchor-field"/>
+      </div>
+    </div>
   </div>
 
   <label>Target Keyword (required)</label>
-  <input id="keyword" type="text" placeholder="e.g. best rotary tattoo machine for beginners"/>
+  <input id="keyword" type="text" placeholder="e.g. best home gym equipment NZ"/>
   <label>Content Topic Ideas / Notes <span class="optional-label">(optional)</span></label>
-  <textarea id="operator_topic_notes" placeholder="e.g. focus on wireless machines, target professional artists"></textarea>
+  <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $500, target beginners"></textarea>
   <label>Target Word Count <span class="optional-label">(optional — default 1300)</span></label>
   <select id="word_count">
-  <option value="1000">1000 words</option>
-  <option value="1300" selected>1300 words (default)</option>
-  <option value="1500">1500 words</option>
-  <option value="2000">2000 words</option>
-  <option value="2500">2500 words</option>
-  <option value="3000">3000 words</option>
+    <option value="1000">1000 words</option>
+    <option value="1300" selected>1300 words (default)</option>
+    <option value="1500">1500 words</option>
+    <option value="2000">2000 words</option>
+    <option value="2500">2500 words</option>
+    <option value="3000">3000 words</option>
   </select>
   <label>Target Country</label>
   <select id="target_country">
@@ -131,12 +153,12 @@
   </div>
   <div id="revision-instructions-box" style="display:none">
     <label>Revision Instructions (required)</label>
-    <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section comparing rotary vs coil machines."></textarea>
+    <textarea id="revision_instructions" placeholder="e.g. Shorten the introduction. Add a section on home gym setup tips."></textarea>
   </div>
   <div id="new-angle-box" style="display:none;background:#E8F4FD;padding:12px;border-radius:6px;margin:10px 0;border:1px solid #185FA5">
     <label style="color:#185FA5;font-weight:600">Your Unique Angle / Human Insight (required)</label>
-    <p style="font-size:12px;color:#555;margin:4px 0 8px 0">Provide a unique insight only you or your client could know — first-hand data, a contrarian opinion with evidence, a customer observation, or an angle no competitor has covered.</p>
-    <textarea id="new_angle_instructions" placeholder="e.g. Based on our customer feedback, 80% of beginners prefer pen-style rotary machines because of the lighter weight..."></textarea>
+    <p style="font-size:12px;color:#555;margin:4px 0 8px 0">Provide a unique insight only you or your client could know — first-hand data, a contrarian opinion with evidence, or an angle no competitor has covered.</p>
+    <textarea id="new_angle_instructions" placeholder="e.g. Based on our sales data, customers who buy weights first are 3x more likely to buy a full home gym setup within 6 months..."></textarea>
   </div>
   <input type="hidden" id="revision_type" value=""/>
   <br/>
@@ -152,7 +174,7 @@
 </div>
 
 <script>
-  const WEBHOOK_URL = 'https://n8n-fmid.srv1801788.hstgr.cloud/webhook/46f643b2-94e4-4361-9966-06a61fed2d66';
+  const WEBHOOK_URL = 'https://n8n-fmid.srv1801788.hstgr.cloud/webhook-test/46f643b2-94e4-4361-9966-06a61fed2d66';
 
   let currentData       = {};
   let currentKeyword    = '';
@@ -171,12 +193,13 @@
     } catch(e) { return 'Client'; }
   }
 
+  function showInternalLinksBox() {
+    document.getElementById('internal-links-box').style.display = 'block';
+  }
+
   async function fetchPages() {
     const clientWebsite = document.getElementById('client_website').value.trim();
-    if (!clientWebsite) {
-      alert('Please enter a client website URL first');
-      return;
-    }
+    if (!clientWebsite) { alert('Please enter a client website URL first'); return; }
     const btn = document.getElementById('fetch-btn');
     btn.textContent = 'Fetching...';
     btn.disabled = true;
@@ -189,23 +212,28 @@
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        alert('Could not fetch pages. Enter links manually.');
-        document.getElementById('pages-box').style.display = 'block';
+        alert('Could not fetch pages. You can enter links manually below.');
+        showInternalLinksBox();
         return;
       }
       const result = Array.isArray(data) ? (data[0].json || data[0]) : data;
       fetchedPages = result.pages || [];
+
       if (fetchedPages.length === 0) {
-        alert('No pages found for this website. Enter links manually below.');
-        document.getElementById('pages-box').style.display = 'block';
+        alert('No pages found for this website. You can enter links manually below.');
+        showInternalLinksBox();
         return;
       }
-      renderPageList();
+
+      // Show pages list and internal links box
       document.getElementById('pages-box').style.display = 'block';
+      showInternalLinksBox();
+      renderPageList();
+
     } catch(e) {
       console.error(e);
-      alert('Could not fetch pages. Enter links manually below.');
-      document.getElementById('pages-box').style.display = 'block';
+      alert('Could not fetch pages. You can enter links manually below.');
+      showInternalLinksBox();
     } finally {
       btn.textContent = 'Fetch Pages';
       btn.disabled = false;
@@ -216,15 +244,14 @@
     const list = document.getElementById('pages-list');
     list.innerHTML = '';
     selectedLinks = [];
-    updateSelectedDisplay();
     fetchedPages.forEach((page, i) => {
       const div = document.createElement('div');
       div.className = 'page-item';
-      div.id = 'page-item-' + i;
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.id = 'page_' + i;
       cb.value = page.url;
+      cb.style.cssText = 'width:auto;margin:0;flex-shrink:0';
       cb.addEventListener('change', function() {
         toggleLink(page.url, this.checked, this);
       });
@@ -233,9 +260,6 @@
       lbl.textContent = page.label;
       div.appendChild(cb);
       div.appendChild(lbl);
-      div.addEventListener('click', function(e) {
-        if (e.target !== cb) cb.click();
-      });
       list.appendChild(div);
     });
   }
@@ -248,28 +272,26 @@
         return;
       }
       selectedLinks.push(url);
+      // Fill next available slot
+      const slot = selectedLinks.length;
+      document.getElementById('internal_link_' + slot).value = url;
+      document.getElementById('internal_anchor_' + slot).focus();
     } else {
       selectedLinks = selectedLinks.filter(u => u !== url);
-    }
-    updateSelectedDisplay();
-  }
-
-  function updateSelectedDisplay() {
-    const display = document.getElementById('selected-links-display');
-    if (selectedLinks.length === 0) {
-      display.innerHTML = '';
-    } else {
-      display.innerHTML = '<strong>Selected:</strong><br>' +
-        selectedLinks.map((u, i) => (i+1) + '. ' + u).join('<br>');
+      // Refill slots
+      document.getElementById('internal_link_1').value = selectedLinks[0] || '';
+      document.getElementById('internal_link_2').value = selectedLinks[1] || '';
+      if (!selectedLinks[0]) document.getElementById('internal_anchor_1').value = '';
+      if (!selectedLinks[1]) document.getElementById('internal_anchor_2').value = '';
     }
   }
 
   function getSelectedInternalLinks() {
-    const manual1 = document.getElementById('manual_link_1').value.trim();
-    const manual2 = document.getElementById('manual_link_2').value.trim();
-    const link1 = selectedLinks[0] || manual1 || '';
-    const link2 = selectedLinks[1] || manual2 || '';
-    return { link1, link2 };
+    const link1   = document.getElementById('internal_link_1').value.trim();
+    const link2   = document.getElementById('internal_link_2').value.trim();
+    const anchor1 = document.getElementById('internal_anchor_1').value.trim();
+    const anchor2 = document.getElementById('internal_anchor_2').value.trim();
+    return { link1, link2, anchor1, anchor2 };
   }
 
   function selectRevisionType(type, btn) {
@@ -306,35 +328,37 @@
     const country       = document.getElementById('target_country').value;
     const english       = document.getElementById('english_variety').value;
     const clientWebsite = document.getElementById('client_website').value.trim();
+    const wordCount     = document.getElementById('word_count').value || '1300';
     if (!keyword) { alert('Please enter a keyword first'); return; }
     currentKeyword    = keyword;
     currentNotes      = notes;
     currentCountry    = country;
     currentEnglish    = english;
     currentClientName = getClientName(clientWebsite);
-    const { link1, link2 } = getSelectedInternalLinks();
+    const { link1, link2, anchor1, anchor2 } = getSelectedInternalLinks();
     showLoading('Running full pipeline... this takes 3-5 minutes');
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-  action:               'generate',
-  keyword:              keyword,
-  operator_topic_notes: notes,
-  target_country:       country,
-  english_variety:      english,
-  client_website:       clientWebsite,
-  client_name:          currentClientName,
-  internal_link_1:      link1,
-  internal_link_2:      link2,
-  word_count:           document.getElementById('word_count').value || '1300'
-})
+          action:                 'generate',
+          keyword:                keyword,
+          operator_topic_notes:   notes,
+          target_country:         country,
+          english_variety:        english,
+          client_website:         clientWebsite,
+          client_name:            currentClientName,
+          internal_link_1:        link1,
+          internal_link_2:        link2,
+          internal_anchor_text_1: anchor1,
+          internal_anchor_text_2: anchor2,
+          word_count:             wordCount
+        })
       });
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        console.error('JSON parse error:', raw.substring(0, 500));
         alert('Response parsing error. Check console for details.');
         hideLoading();
         document.getElementById('step1-box').style.display = 'block';
@@ -417,15 +441,19 @@
   }
 
   function changeKeyword() {
-    document.getElementById('review-box').style.display   = 'none';
-    document.getElementById('article-box').style.display  = 'none';
-    document.getElementById('keyword').value              = '';
-    document.getElementById('operator_topic_notes').value = '';
-    document.getElementById('client_website').value       = '';
-    document.getElementById('pages-box').style.display    = 'none';
-    document.getElementById('pages-list').innerHTML       = '';
-    document.getElementById('selected-links-display').innerHTML = '';
-    document.getElementById('step1-box').style.display    = 'block';
+    document.getElementById('review-box').style.display        = 'none';
+    document.getElementById('article-box').style.display       = 'none';
+    document.getElementById('keyword').value                   = '';
+    document.getElementById('operator_topic_notes').value      = '';
+    document.getElementById('client_website').value            = '';
+    document.getElementById('internal_link_1').value           = '';
+    document.getElementById('internal_link_2').value           = '';
+    document.getElementById('internal_anchor_1').value         = '';
+    document.getElementById('internal_anchor_2').value         = '';
+    document.getElementById('pages-box').style.display         = 'none';
+    document.getElementById('internal-links-box').style.display = 'none';
+    document.getElementById('pages-list').innerHTML            = '';
+    document.getElementById('step1-box').style.display         = 'block';
     currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
     currentData = {}; fetchedPages = []; selectedLinks = [];
@@ -462,36 +490,38 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:                'minor_edit',
-          revision_instructions: instructions,
-          keyword:               currentKeyword,
-          article:               currentData.article              || '',
-          unique_factor:         currentData.unique_factor        || '',
-          content_brief:         currentData.content_brief        || '',
-          content_gaps:          currentData.content_gaps         || '',
-          competitor_summary:    currentData.competitor_summary   || '',
-          secondary_keywords:    currentData.secondary_keywords   || '',
-          search_volume:         currentData.search_volume        || 0,
-          keyword_difficulty:    currentData.keyword_difficulty   || 0,
-          operator_topic_notes:  currentData.operator_topic_notes || '',
-          english_variety:       currentEnglish,
-          word_count: currentData.word_count || '1300',
-          internal_link_1:       currentData.internal_link_1      || '',
-          internal_link_2:       currentData.internal_link_2      || '',
-          external_links_found:  currentData.external_links_found || '',
-          client_name:           currentClientName,
-          seo_check:             currentData.seo_check            || {},
-          eeat_score:            currentData.eeat_score           || {},
-          article_cost:          currentData.article_cost         || '',
-          inputTokens:           currentData.inputTokens          || 0,
-          outputTokens:          currentData.outputTokens         || 0
+          action:                 'minor_edit',
+          revision_instructions:  instructions,
+          keyword:                currentKeyword,
+          article:                currentData.article               || '',
+          unique_factor:          currentData.unique_factor         || '',
+          content_brief:          currentData.content_brief         || '',
+          content_gaps:           currentData.content_gaps          || '',
+          competitor_summary:     currentData.competitor_summary    || '',
+          secondary_keywords:     currentData.secondary_keywords    || '',
+          search_volume:          currentData.search_volume         || 0,
+          keyword_difficulty:     currentData.keyword_difficulty    || 0,
+          operator_topic_notes:   currentData.operator_topic_notes  || '',
+          english_variety:        currentEnglish,
+          internal_link_1:        currentData.internal_link_1       || '',
+          internal_link_2:        currentData.internal_link_2       || '',
+          internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
+          internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          external_links_found:   currentData.external_links_found  || '',
+          client_name:            currentClientName,
+          word_count:             currentData.word_count            || '1300',
+          seo_check:              currentData.seo_check             || {},
+          eeat_score:             currentData.eeat_score            || {},
+          article_cost:           currentData.article_cost          || '',
+          inputTokens:            currentData.inputTokens           || 0,
+          outputTokens:           currentData.outputTokens          || 0
         })
       });
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        alert('Response parsing error.'); hideLoading();
-        document.getElementById('article-box').style.display = 'block'; return;
+        alert('Response parsing error.');
+        hideLoading(); document.getElementById('article-box').style.display = 'block'; return;
       }
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item; hideLoading(); displayArticle(item);
@@ -509,35 +539,37 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:                'new_angle',
-          revision_instructions: instructions,
-          keyword:               currentKeyword,
-          content_gaps:          currentData.content_gaps         || '',
-          competitor_summary:    currentData.competitor_summary   || '',
-          secondary_keywords:    currentData.secondary_keywords   || '',
-          search_volume:         currentData.search_volume        || 0,
-          keyword_difficulty:    currentData.keyword_difficulty   || 0,
-          operator_topic_notes:  currentData.operator_topic_notes || '',
-          english_variety:       currentEnglish,
-          internal_link_1:       currentData.internal_link_1      || '',
-          internal_link_2:       currentData.internal_link_2      || '',
-          client_name:           currentClientName,
-          word_count: currentData.word_count || '1300',
-          article:               currentData.article              || '',
-          unique_factor:         currentData.unique_factor        || '',
-          content_brief:         currentData.content_brief        || '',
-          seo_check:             currentData.seo_check            || {},
-          eeat_score:            currentData.eeat_score           || {},
-          article_cost:          currentData.article_cost         || '',
-          inputTokens:           currentData.inputTokens          || 0,
-          outputTokens:          currentData.outputTokens         || 0
+          action:                 'new_angle',
+          revision_instructions:  instructions,
+          keyword:                currentKeyword,
+          content_gaps:           currentData.content_gaps          || '',
+          competitor_summary:     currentData.competitor_summary    || '',
+          secondary_keywords:     currentData.secondary_keywords    || '',
+          search_volume:          currentData.search_volume         || 0,
+          keyword_difficulty:     currentData.keyword_difficulty    || 0,
+          operator_topic_notes:   currentData.operator_topic_notes  || '',
+          english_variety:        currentEnglish,
+          internal_link_1:        currentData.internal_link_1       || '',
+          internal_link_2:        currentData.internal_link_2       || '',
+          internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
+          internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          client_name:            currentClientName,
+          article:                currentData.article               || '',
+          unique_factor:          currentData.unique_factor         || '',
+          content_brief:          currentData.content_brief         || '',
+          word_count:             currentData.word_count            || '1300',
+          seo_check:              currentData.seo_check             || {},
+          eeat_score:             currentData.eeat_score            || {},
+          article_cost:           currentData.article_cost          || '',
+          inputTokens:            currentData.inputTokens           || 0,
+          outputTokens:           currentData.outputTokens          || 0
         })
       });
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        alert('Response parsing error.'); hideLoading();
-        document.getElementById('article-box').style.display = 'block'; return;
+        alert('Response parsing error.');
+        hideLoading(); document.getElementById('article-box').style.display = 'block'; return;
       }
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item; hideLoading(); displayArticle(item);
@@ -555,34 +587,36 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:                'less_ai',
-          revision_instructions: instructions,
-          keyword:               currentKeyword,
-          article:               currentData.article              || '',
-          unique_factor:         currentData.unique_factor        || '',
-          content_brief:         currentData.content_brief        || '',
-          content_gaps:          currentData.content_gaps         || '',
-          secondary_keywords:    currentData.secondary_keywords   || '',
-          search_volume:         currentData.search_volume        || 0,
-          keyword_difficulty:    currentData.keyword_difficulty   || 0,
-          operator_topic_notes:  currentData.operator_topic_notes || '',
-          english_variety:       currentEnglish,
-          internal_link_1:       currentData.internal_link_1      || '',
-          internal_link_2:       currentData.internal_link_2      || '',
-          client_name:           currentClientName,
-          word_count: currentData.word_count || '1300',
-          seo_check:             currentData.seo_check            || {},
-          eeat_score:            currentData.eeat_score           || {},
-          article_cost:          currentData.article_cost         || '',
-          inputTokens:           currentData.inputTokens          || 0,
-          outputTokens:          currentData.outputTokens         || 0
+          action:                 'less_ai',
+          revision_instructions:  instructions,
+          keyword:                currentKeyword,
+          article:                currentData.article               || '',
+          unique_factor:          currentData.unique_factor         || '',
+          content_brief:          currentData.content_brief         || '',
+          content_gaps:           currentData.content_gaps          || '',
+          secondary_keywords:     currentData.secondary_keywords    || '',
+          search_volume:          currentData.search_volume         || 0,
+          keyword_difficulty:     currentData.keyword_difficulty    || 0,
+          operator_topic_notes:   currentData.operator_topic_notes  || '',
+          english_variety:        currentEnglish,
+          internal_link_1:        currentData.internal_link_1       || '',
+          internal_link_2:        currentData.internal_link_2       || '',
+          internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
+          internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          client_name:            currentClientName,
+          word_count:             currentData.word_count            || '1300',
+          seo_check:              currentData.seo_check             || {},
+          eeat_score:             currentData.eeat_score            || {},
+          article_cost:           currentData.article_cost          || '',
+          inputTokens:            currentData.inputTokens           || 0,
+          outputTokens:           currentData.outputTokens          || 0
         })
       });
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        alert('Response parsing error.'); hideLoading();
-        document.getElementById('article-box').style.display = 'block'; return;
+        alert('Response parsing error.');
+        hideLoading(); document.getElementById('article-box').style.display = 'block'; return;
       }
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       currentData = item; hideLoading(); displayArticle(item);
@@ -600,34 +634,34 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:                'approved',
-          keyword:               currentKeyword,
-          article:               currentData.article              || '',
-          unique_factor:         currentData.unique_factor        || '',
-          content_brief:         currentData.content_brief        || '',
-          content_gaps:          currentData.content_gaps         || '',
-          secondary_keywords:    currentData.secondary_keywords   || '',
-          search_volume:         currentData.search_volume        || 0,
-          keyword_difficulty:    currentData.keyword_difficulty   || 0,
-          operator_topic_notes:  currentData.operator_topic_notes || '',
-          competitor_summary:    currentData.competitor_summary   || '',
-          internal_link_1:       currentData.internal_link_1      || '',
-          internal_link_2:       currentData.internal_link_2      || '',
-          internal_links_used:   currentData.internal_links_used  || '',
-          external_links_found:  currentData.external_links_found || '',
-          client_name:           currentClientName,
-          seo_check:             currentData.seo_check            || {},
-          eeat_score:            currentData.eeat_score           || {},
-          article_cost:          currentData.article_cost         || '',
-          inputTokens:           currentData.inputTokens          || 0,
-          outputTokens:          currentData.outputTokens         || 0
+          action:                 'approved',
+          keyword:                currentKeyword,
+          article:                currentData.article               || '',
+          unique_factor:          currentData.unique_factor         || '',
+          content_brief:          currentData.content_brief         || '',
+          content_gaps:           currentData.content_gaps          || '',
+          secondary_keywords:     currentData.secondary_keywords    || '',
+          search_volume:          currentData.search_volume         || 0,
+          keyword_difficulty:     currentData.keyword_difficulty    || 0,
+          operator_topic_notes:   currentData.operator_topic_notes  || '',
+          competitor_summary:     currentData.competitor_summary    || '',
+          internal_link_1:        currentData.internal_link_1       || '',
+          internal_link_2:        currentData.internal_link_2       || '',
+          internal_links_used:    currentData.internal_links_used   || '',
+          external_links_found:   currentData.external_links_found  || '',
+          client_name:            currentClientName,
+          seo_check:              currentData.seo_check             || {},
+          eeat_score:             currentData.eeat_score            || {},
+          article_cost:           currentData.article_cost          || '',
+          inputTokens:            currentData.inputTokens           || 0,
+          outputTokens:           currentData.outputTokens          || 0
         })
       });
       const raw = await res.text();
       let data;
       try { data = JSON.parse(raw); } catch(e) {
-        alert('Response parsing error.'); hideLoading();
-        document.getElementById('article-box').style.display = 'block'; return;
+        alert('Response parsing error.');
+        hideLoading(); document.getElementById('article-box').style.display = 'block'; return;
       }
       const item = Array.isArray(data) ? (data[0].json || data[0]) : data;
       hideLoading();
@@ -646,17 +680,21 @@
   }
 
   function startOver() {
-    document.getElementById('keyword').value              = '';
-    document.getElementById('operator_topic_notes').value = '';
-    document.getElementById('client_website').value       = '';
-    document.getElementById('pages-box').style.display    = 'none';
-    document.getElementById('pages-list').innerHTML       = '';
-    document.getElementById('selected-links-display').innerHTML = '';
-    document.getElementById('article-box').style.display  = 'none';
-    document.getElementById('review-box').style.display   = 'none';
-    document.getElementById('result-box').style.display   = 'none';
-    document.getElementById('loading-box').style.display  = 'none';
-    document.getElementById('step1-box').style.display    = 'block';
+    document.getElementById('keyword').value                   = '';
+    document.getElementById('operator_topic_notes').value      = '';
+    document.getElementById('client_website').value            = '';
+    document.getElementById('internal_link_1').value           = '';
+    document.getElementById('internal_link_2').value           = '';
+    document.getElementById('internal_anchor_1').value         = '';
+    document.getElementById('internal_anchor_2').value         = '';
+    document.getElementById('pages-box').style.display         = 'none';
+    document.getElementById('internal-links-box').style.display = 'none';
+    document.getElementById('pages-list').innerHTML            = '';
+    document.getElementById('article-box').style.display       = 'none';
+    document.getElementById('review-box').style.display        = 'none';
+    document.getElementById('result-box').style.display        = 'none';
+    document.getElementById('loading-box').style.display       = 'none';
+    document.getElementById('step1-box').style.display         = 'block';
     currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
     currentData = {}; fetchedPages = []; selectedLinks = [];
