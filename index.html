@@ -40,12 +40,12 @@
     .revision-type-btn{padding:10px 20px;margin:5px;font-size:14px;cursor:pointer;border:2px solid #ccc;border-radius:6px;background:white;color:#333}
     .revision-type-btn.selected{border-color:#185FA5;background:#EBF5FB;color:#185FA5;font-weight:bold}
     #revision-type-buttons{margin:10px 0}
-    .link-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .link-row{display:flex;gap:8px;align-items:center;margin-bottom:4px}
     .link-row input{margin:0}
     .link-row input.url-field{flex:2}
     .link-row input.anchor-field{flex:1}
     .link-box{background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:10px;margin:6px 0}
-    .link-box-label{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block}
+    .link-box-label{font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px}
     .page-item{padding:6px 8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;cursor:pointer}
     .page-item:hover{background:#f0f7ff}
     .page-item input[type="checkbox"]{width:auto;margin:0;flex-shrink:0}
@@ -65,29 +65,15 @@
     <button class="submit" onclick="fetchPages()" id="fetch-btn" style="white-space:nowrap;margin:0;padding:10px 16px">Fetch Pages</button>
   </div>
 
-  <!-- Pages list — shown after successful fetch -->
   <div id="pages-box" style="display:none;margin-top:8px">
-    <label>Select up to 2 pages to use as internal links</label>
+    <label>Select pages to use as internal links</label>
     <div id="pages-list" style="background:white;border:1px solid #ccc;border-radius:6px;max-height:200px;overflow-y:auto;margin:6px 0"></div>
   </div>
 
-  <!-- Internal link fields — hidden until fetch is attempted -->
   <div id="internal-links-box" style="display:none;margin-top:10px">
     <label>Internal Links <span class="optional-label">(select from list above or enter manually — include anchor text)</span></label>
-    <div class="link-box">
-      <span class="link-box-label">Internal Link 1</span>
-      <div class="link-row">
-        <input id="internal_link_1" type="url" placeholder="URL" class="url-field"/>
-        <input id="internal_anchor_1" type="text" placeholder="Anchor text" class="anchor-field"/>
-      </div>
-    </div>
-    <div class="link-box">
-      <span class="link-box-label">Internal Link 2</span>
-      <div class="link-row">
-        <input id="internal_link_2" type="url" placeholder="URL" class="url-field"/>
-        <input id="internal_anchor_2" type="text" placeholder="Anchor text" class="anchor-field"/>
-      </div>
-    </div>
+    <div id="internal-links-container"></div>
+    <button type="button" class="submit" onclick="addLinkField()" style="margin-top:6px;padding:8px 16px;font-size:13px">+ Add Another Link</button>
   </div>
 
   <label>Target Keyword (required)</label>
@@ -184,6 +170,7 @@
   let currentClientName = '';
   let fetchedPages      = [];
   let selectedLinks     = [];
+  let linkCount         = 0;
 
   function getClientName(url) {
     if (!url) return 'Client';
@@ -193,8 +180,41 @@
     } catch(e) { return 'Client'; }
   }
 
+  function addLinkField(url, anchor) {
+    linkCount++;
+    const container = document.getElementById('internal-links-container');
+    const div = document.createElement('div');
+    div.className = 'link-box';
+    div.id = 'link-box-' + linkCount;
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="link-box-label">Internal Link ${linkCount}</span>
+        <button type="button" onclick="removeLinkField(${linkCount})" style="background:#A32D2D;color:white;border:none;border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer">Remove</button>
+      </div>
+      <div class="link-row">
+        <input id="internal_link_${linkCount}" type="url" placeholder="URL" class="url-field" value="${url || ''}"/>
+        <input id="internal_anchor_${linkCount}" type="text" placeholder="Anchor text" class="anchor-field" value="${anchor || ''}"/>
+      </div>
+    `;
+    container.appendChild(div);
+    if (!url) document.getElementById('internal_link_' + linkCount).focus();
+  }
+
+  function removeLinkField(n) {
+    const box = document.getElementById('link-box-' + n);
+    if (box) {
+      const urlInput = box.querySelector('input[type="url"]');
+      if (urlInput) selectedLinks = selectedLinks.filter(u => u !== urlInput.value);
+      box.remove();
+    }
+  }
+
   function showInternalLinksBox() {
     document.getElementById('internal-links-box').style.display = 'block';
+    const container = document.getElementById('internal-links-container');
+    if (container.children.length === 0) {
+      addLinkField();
+    }
   }
 
   async function fetchPages() {
@@ -218,18 +238,14 @@
       }
       const result = Array.isArray(data) ? (data[0].json || data[0]) : data;
       fetchedPages = result.pages || [];
-
       if (fetchedPages.length === 0) {
         alert('No pages found for this website. You can enter links manually below.');
         showInternalLinksBox();
         return;
       }
-
-      // Show pages list and internal links box
       document.getElementById('pages-box').style.display = 'block';
       showInternalLinksBox();
       renderPageList();
-
     } catch(e) {
       console.error(e);
       alert('Could not fetch pages. You can enter links manually below.');
@@ -266,32 +282,47 @@
 
   function toggleLink(url, checked, checkbox) {
     if (checked) {
-      if (selectedLinks.length >= 2) {
-        checkbox.checked = false;
-        alert('You can only select up to 2 internal links.');
-        return;
-      }
       selectedLinks.push(url);
-      // Fill next available slot
-      const slot = selectedLinks.length;
-      document.getElementById('internal_link_' + slot).value = url;
-      document.getElementById('internal_anchor_' + slot).focus();
+      // Find first empty URL field and fill it, or add new field
+      const container = document.getElementById('internal-links-container');
+      const urlInputs = container.querySelectorAll('input[type="url"]');
+      let filled = false;
+      for (let input of urlInputs) {
+        if (!input.value.trim()) {
+          input.value = url;
+          // Focus the anchor text field next to it
+          const anchorInput = input.closest('.link-box').querySelector('input[type="text"]');
+          if (anchorInput) anchorInput.focus();
+          filled = true;
+          break;
+        }
+      }
+      if (!filled) addLinkField(url, '');
     } else {
       selectedLinks = selectedLinks.filter(u => u !== url);
-      // Refill slots
-      document.getElementById('internal_link_1').value = selectedLinks[0] || '';
-      document.getElementById('internal_link_2').value = selectedLinks[1] || '';
-      if (!selectedLinks[0]) document.getElementById('internal_anchor_1').value = '';
-      if (!selectedLinks[1]) document.getElementById('internal_anchor_2').value = '';
+      const container = document.getElementById('internal-links-container');
+      const inputs = container.querySelectorAll('input[type="url"]');
+      inputs.forEach(input => {
+        if (input.value === url) {
+          input.closest('.link-box').remove();
+        }
+      });
     }
   }
 
   function getSelectedInternalLinks() {
-    const link1   = document.getElementById('internal_link_1').value.trim();
-    const link2   = document.getElementById('internal_link_2').value.trim();
-    const anchor1 = document.getElementById('internal_anchor_1').value.trim();
-    const anchor2 = document.getElementById('internal_anchor_2').value.trim();
-    return { link1, link2, anchor1, anchor2 };
+    const container = document.getElementById('internal-links-container');
+    if (!container) return [];
+    const linkBoxes = container.querySelectorAll('.link-box');
+    const links = [];
+    linkBoxes.forEach(box => {
+      const urlInput = box.querySelector('input[type="url"]');
+      const anchorInput = box.querySelector('input[type="text"]');
+      const url = urlInput ? urlInput.value.trim() : '';
+      const anchor = anchorInput ? anchorInput.value.trim() : '';
+      if (url) links.push({ url, anchor });
+    });
+    return links;
   }
 
   function selectRevisionType(type, btn) {
@@ -335,25 +366,30 @@
     currentCountry    = country;
     currentEnglish    = english;
     currentClientName = getClientName(clientWebsite);
-    const { link1, link2, anchor1, anchor2 } = getSelectedInternalLinks();
+    const internalLinks = getSelectedInternalLinks();
     showLoading('Running full pipeline... this takes 3-5 minutes');
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action:                 'generate',
-          keyword:                keyword,
-          operator_topic_notes:   notes,
-          target_country:         country,
-          english_variety:        english,
-          client_website:         clientWebsite,
-          client_name:            currentClientName,
-          internal_link_1:        link1,
-          internal_link_2:        link2,
-          internal_anchor_text_1: anchor1,
-          internal_anchor_text_2: anchor2,
-          word_count:             wordCount
+          action:               'generate',
+          keyword:              keyword,
+          operator_topic_notes: notes,
+          target_country:       country,
+          english_variety:      english,
+          client_website:       clientWebsite,
+          client_name:          currentClientName,
+          internal_links:       internalLinks,
+          internal_link_1:      internalLinks[0] ? internalLinks[0].url : '',
+          internal_link_2:      internalLinks[1] ? internalLinks[1].url : '',
+          internal_link_3:      internalLinks[2] ? internalLinks[2].url : '',
+          internal_link_4:      internalLinks[3] ? internalLinks[3].url : '',
+          internal_anchor_text_1: internalLinks[0] ? internalLinks[0].anchor : '',
+          internal_anchor_text_2: internalLinks[1] ? internalLinks[1].anchor : '',
+          internal_anchor_text_3: internalLinks[2] ? internalLinks[2].anchor : '',
+          internal_anchor_text_4: internalLinks[3] ? internalLinks[3].anchor : '',
+          word_count:           wordCount
         })
       });
       const raw = await res.text();
@@ -440,23 +476,25 @@
     document.getElementById('article-box').style.display = 'block';
   }
 
-  function changeKeyword() {
-    document.getElementById('review-box').style.display        = 'none';
-    document.getElementById('article-box').style.display       = 'none';
-    document.getElementById('keyword').value                   = '';
-    document.getElementById('operator_topic_notes').value      = '';
-    document.getElementById('client_website').value            = '';
-    document.getElementById('internal_link_1').value           = '';
-    document.getElementById('internal_link_2').value           = '';
-    document.getElementById('internal_anchor_1').value         = '';
-    document.getElementById('internal_anchor_2').value         = '';
-    document.getElementById('pages-box').style.display         = 'none';
+  function resetForm() {
+    document.getElementById('keyword').value              = '';
+    document.getElementById('operator_topic_notes').value = '';
+    document.getElementById('client_website').value       = '';
+    document.getElementById('pages-box').style.display    = 'none';
     document.getElementById('internal-links-box').style.display = 'none';
-    document.getElementById('pages-list').innerHTML            = '';
-    document.getElementById('step1-box').style.display         = 'block';
+    document.getElementById('internal-links-container').innerHTML = '';
+    document.getElementById('pages-list').innerHTML       = '';
+    linkCount = 0;
     currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
     currentData = {}; fetchedPages = []; selectedLinks = [];
+  }
+
+  function changeKeyword() {
+    document.getElementById('review-box').style.display  = 'none';
+    document.getElementById('article-box').style.display = 'none';
+    resetForm();
+    document.getElementById('step1-box').style.display   = 'block';
   }
 
   async function submitRevision() {
@@ -503,10 +541,15 @@
           keyword_difficulty:     currentData.keyword_difficulty    || 0,
           operator_topic_notes:   currentData.operator_topic_notes  || '',
           english_variety:        currentEnglish,
+          internal_links:         currentData.internal_links        || [],
           internal_link_1:        currentData.internal_link_1       || '',
           internal_link_2:        currentData.internal_link_2       || '',
+          internal_link_3:        currentData.internal_link_3       || '',
+          internal_link_4:        currentData.internal_link_4       || '',
           internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
           internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          internal_anchor_text_3: currentData.internal_anchor_text_3 || '',
+          internal_anchor_text_4: currentData.internal_anchor_text_4 || '',
           external_links_found:   currentData.external_links_found  || '',
           client_name:            currentClientName,
           word_count:             currentData.word_count            || '1300',
@@ -549,10 +592,15 @@
           keyword_difficulty:     currentData.keyword_difficulty    || 0,
           operator_topic_notes:   currentData.operator_topic_notes  || '',
           english_variety:        currentEnglish,
+          internal_links:         currentData.internal_links        || [],
           internal_link_1:        currentData.internal_link_1       || '',
           internal_link_2:        currentData.internal_link_2       || '',
+          internal_link_3:        currentData.internal_link_3       || '',
+          internal_link_4:        currentData.internal_link_4       || '',
           internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
           internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          internal_anchor_text_3: currentData.internal_anchor_text_3 || '',
+          internal_anchor_text_4: currentData.internal_anchor_text_4 || '',
           client_name:            currentClientName,
           article:                currentData.article               || '',
           unique_factor:          currentData.unique_factor         || '',
@@ -599,10 +647,15 @@
           keyword_difficulty:     currentData.keyword_difficulty    || 0,
           operator_topic_notes:   currentData.operator_topic_notes  || '',
           english_variety:        currentEnglish,
+          internal_links:         currentData.internal_links        || [],
           internal_link_1:        currentData.internal_link_1       || '',
           internal_link_2:        currentData.internal_link_2       || '',
+          internal_link_3:        currentData.internal_link_3       || '',
+          internal_link_4:        currentData.internal_link_4       || '',
           internal_anchor_text_1: currentData.internal_anchor_text_1 || '',
           internal_anchor_text_2: currentData.internal_anchor_text_2 || '',
+          internal_anchor_text_3: currentData.internal_anchor_text_3 || '',
+          internal_anchor_text_4: currentData.internal_anchor_text_4 || '',
           client_name:            currentClientName,
           word_count:             currentData.word_count            || '1300',
           seo_check:              currentData.seo_check             || {},
@@ -645,6 +698,7 @@
           keyword_difficulty:     currentData.keyword_difficulty    || 0,
           operator_topic_notes:   currentData.operator_topic_notes  || '',
           competitor_summary:     currentData.competitor_summary    || '',
+          internal_links:         currentData.internal_links        || [],
           internal_link_1:        currentData.internal_link_1       || '',
           internal_link_2:        currentData.internal_link_2       || '',
           internal_links_used:    currentData.internal_links_used   || '',
@@ -680,24 +734,12 @@
   }
 
   function startOver() {
-    document.getElementById('keyword').value                   = '';
-    document.getElementById('operator_topic_notes').value      = '';
-    document.getElementById('client_website').value            = '';
-    document.getElementById('internal_link_1').value           = '';
-    document.getElementById('internal_link_2').value           = '';
-    document.getElementById('internal_anchor_1').value         = '';
-    document.getElementById('internal_anchor_2').value         = '';
-    document.getElementById('pages-box').style.display         = 'none';
-    document.getElementById('internal-links-box').style.display = 'none';
-    document.getElementById('pages-list').innerHTML            = '';
-    document.getElementById('article-box').style.display       = 'none';
-    document.getElementById('review-box').style.display        = 'none';
-    document.getElementById('result-box').style.display        = 'none';
-    document.getElementById('loading-box').style.display       = 'none';
-    document.getElementById('step1-box').style.display         = 'block';
-    currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
-    currentEnglish = 'American'; currentClientName = '';
-    currentData = {}; fetchedPages = []; selectedLinks = [];
+    resetForm();
+    document.getElementById('article-box').style.display  = 'none';
+    document.getElementById('review-box').style.display   = 'none';
+    document.getElementById('result-box').style.display   = 'none';
+    document.getElementById('loading-box').style.display  = 'none';
+    document.getElementById('step1-box').style.display    = 'block';
   }
 </script>
 </body>
