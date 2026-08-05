@@ -80,6 +80,8 @@
   <input id="keyword" type="text" placeholder="e.g. best home gym equipment NZ"/>
   <label>Content Topic Ideas / Notes <span class="optional-label">(optional)</span></label>
   <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $500, target beginners"></textarea>
+  <label>Target Audience <span class="optional-label">(optional — used only for writing style)</span></label>
+  <input id="target_audience" type="text" placeholder="e.g. women over 25 interested in eco-friendly gifting, first-time homeowners"/>
   <label>Target Word Count <span class="optional-label">(optional — default 1300)</span></label>
   <select id="word_count">
     <option value="1000">1000 words</option>
@@ -360,6 +362,7 @@
     const english       = document.getElementById('english_variety').value;
     const clientWebsite = document.getElementById('client_website').value.trim();
     const wordCount     = document.getElementById('word_count').value || '1300';
+    const targetAudience = document.getElementById('target_audience').value.trim();
     if (!keyword) { alert('Please enter a keyword first'); return; }
     currentKeyword    = keyword;
     currentNotes      = notes;
@@ -389,6 +392,7 @@
           internal_anchor_text_2: internalLinks[1] ? internalLinks[1].anchor : '',
           internal_anchor_text_3: internalLinks[2] ? internalLinks[2].anchor : '',
           internal_anchor_text_4: internalLinks[3] ? internalLinks[3].anchor : '',
+          target_audience: targetAudience,
           word_count:           wordCount
         })
       });
@@ -495,6 +499,7 @@
     document.getElementById('article-box').style.display = 'none';
     resetForm();
     document.getElementById('step1-box').style.display   = 'block';
+    document.getElementById('target_audience').value = '';
   }
 
   async function submitRevision() {
@@ -557,7 +562,8 @@
           eeat_score:             currentData.eeat_score            || {},
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
-          outputTokens:           currentData.outputTokens          || 0
+          outputTokens:           currentData.outputTokens          || 0,
+          target_audience: targetAudience
         })
       });
       const raw = await res.text();
@@ -610,7 +616,8 @@
           eeat_score:             currentData.eeat_score            || {},
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
-          outputTokens:           currentData.outputTokens          || 0
+          outputTokens:           currentData.outputTokens          || 0,
+          target_audience: targetAudience
         })
       });
       const raw = await res.text();
@@ -662,7 +669,8 @@
           eeat_score:             currentData.eeat_score            || {},
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
-          outputTokens:           currentData.outputTokens          || 0
+          outputTokens:           currentData.outputTokens          || 0,
+          target_audience: targetAudience
         })
       });
       const raw = await res.text();
@@ -740,6 +748,7 @@
     document.getElementById('result-box').style.display   = 'none';
     document.getElementById('loading-box').style.display  = 'none';
     document.getElementById('step1-box').style.display    = 'block';
+    document.getElementById('target_audience').value = '';
   }
 </script>
 </body>
