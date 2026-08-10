@@ -489,6 +489,7 @@
     document.getElementById('internal-links-container').innerHTML = '';
     document.getElementById('pages-list').innerHTML       = '';
     linkCount = 0;
+    const taField = document.getElementById('target_audience'); if(taField) taField.value = '';
     currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
     currentData = {}; fetchedPages = []; selectedLinks = [];
@@ -563,7 +564,7 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: targetAudience
+          target_audience: currentData.target_audience || ''
         })
       });
       const raw = await res.text();
@@ -617,7 +618,7 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: targetAudience
+          target_audience: currentData.target_audience || ''
         })
       });
       const raw = await res.text();
@@ -670,7 +671,7 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: targetAudience
+          target_audience: currentData.target_audience || ''
         })
       });
       const raw = await res.text();
