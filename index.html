@@ -50,6 +50,7 @@
     .page-item:hover{background:#f0f7ff}
     .page-item input[type="checkbox"]{width:auto;margin:0;flex-shrink:0}
     .page-item label{font-size:12px;color:#333;cursor:pointer;margin:0;word-break:break-all;flex:1}
+    #utility-pages-manual-box{display:none}
   </style>
 </head>
 <body>
@@ -74,6 +75,11 @@
     <label>Internal Links <span class="optional-label">(select from list above or enter manually — include anchor text)</span></label>
     <div id="internal-links-container"></div>
     <button type="button" class="submit" onclick="addLinkField()" style="margin-top:6px;padding:8px 16px;font-size:13px">+ Add Another Link</button>
+  </div>
+
+  <div id="utility-pages-manual-box" style="display:none">
+    <label>Utility Pages for FAQ <span class="optional-label">(optional — About Us, Contact, Returns Policy URLs, comma separated)</span></label>
+    <textarea id="utility_pages_manual" placeholder="e.g. https://mypartybox.co.nz/pages/about-us, https://mypartybox.co.nz/pages/return-cancellation"></textarea>
   </div>
 
   <label>Target Keyword (required)</label>
@@ -162,7 +168,7 @@
 </div>
 
 <script>
-  const WEBHOOK_URL = 'https://n8n-fmid.srv1801788.hstgr.cloud/webhook/46f643b2-94e4-4361-9966-06a61fed2d66';
+  const WEBHOOK_URL = 'https://n8n-fmid.srv1801788.hstgr.cloud/webhook-test/46f643b2-94e4-4361-9966-06a61fed2d66';
 
   let currentData       = {};
   let currentKeyword    = '';
@@ -173,6 +179,7 @@
   let fetchedPages      = [];
   let selectedLinks     = [];
   let linkCount         = 0;
+  let autoUtilityPages  = [];
 
   function getClientName(url) {
     if (!url) return 'Client';
@@ -236,22 +243,33 @@
       try { data = JSON.parse(raw); } catch(e) {
         alert('Could not fetch pages. You can enter links manually below.');
         showInternalLinksBox();
+        document.getElementById('utility-pages-manual-box').style.display = 'block';
         return;
       }
       const result = Array.isArray(data) ? (data[0].json || data[0]) : data;
       fetchedPages = result.pages || [];
+      autoUtilityPages = result.utility_pages || [];
       if (fetchedPages.length === 0) {
         alert('No pages found for this website. You can enter links manually below.');
         showInternalLinksBox();
+        document.getElementById('utility-pages-manual-box').style.display = 'block';
         return;
       }
       document.getElementById('pages-box').style.display = 'block';
       showInternalLinksBox();
       renderPageList();
+
+      // Show manual utility field only if none were auto-detected
+      if (autoUtilityPages.length > 0) {
+        document.getElementById('utility-pages-manual-box').style.display = 'none';
+      } else {
+        document.getElementById('utility-pages-manual-box').style.display = 'block';
+      }
     } catch(e) {
       console.error(e);
       alert('Could not fetch pages. You can enter links manually below.');
       showInternalLinksBox();
+      document.getElementById('utility-pages-manual-box').style.display = 'block';
     } finally {
       btn.textContent = 'Fetch Pages';
       btn.disabled = false;
@@ -285,14 +303,12 @@
   function toggleLink(url, checked, checkbox) {
     if (checked) {
       selectedLinks.push(url);
-      // Find first empty URL field and fill it, or add new field
       const container = document.getElementById('internal-links-container');
       const urlInputs = container.querySelectorAll('input[type="url"]');
       let filled = false;
       for (let input of urlInputs) {
         if (!input.value.trim()) {
           input.value = url;
-          // Focus the anchor text field next to it
           const anchorInput = input.closest('.link-box').querySelector('input[type="text"]');
           if (anchorInput) anchorInput.focus();
           filled = true;
@@ -325,6 +341,10 @@
       if (url) links.push({ url, anchor });
     });
     return links;
+  }
+
+  function getUtilityPages() {
+    return autoUtilityPages || [];
   }
 
   function selectRevisionType(type, btn) {
@@ -363,6 +383,7 @@
     const clientWebsite = document.getElementById('client_website').value.trim();
     const wordCount     = document.getElementById('word_count').value || '1300';
     const targetAudience = document.getElementById('target_audience').value.trim();
+    const utilityPagesManual = document.getElementById('utility_pages_manual').value.trim();
     if (!keyword) { alert('Please enter a keyword first'); return; }
     currentKeyword    = keyword;
     currentNotes      = notes;
@@ -370,6 +391,7 @@
     currentEnglish    = english;
     currentClientName = getClientName(clientWebsite);
     const internalLinks = getSelectedInternalLinks();
+    const utilityPages = getUtilityPages();
     showLoading('Running full pipeline... this takes 3-5 minutes');
     try {
       const res = await fetch(WEBHOOK_URL, {
@@ -392,7 +414,9 @@
           internal_anchor_text_2: internalLinks[1] ? internalLinks[1].anchor : '',
           internal_anchor_text_3: internalLinks[2] ? internalLinks[2].anchor : '',
           internal_anchor_text_4: internalLinks[3] ? internalLinks[3].anchor : '',
-          target_audience: targetAudience,
+          target_audience:      targetAudience,
+          utility_pages:        utilityPages,
+          utility_pages_manual: utilityPagesManual,
           word_count:           wordCount
         })
       });
@@ -488,11 +512,13 @@
     document.getElementById('internal-links-box').style.display = 'none';
     document.getElementById('internal-links-container').innerHTML = '';
     document.getElementById('pages-list').innerHTML       = '';
+    document.getElementById('utility_pages_manual').value = '';
+    document.getElementById('utility-pages-manual-box').style.display = 'none';
     linkCount = 0;
     const taField = document.getElementById('target_audience'); if(taField) taField.value = '';
     currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
-    currentData = {}; fetchedPages = []; selectedLinks = [];
+    currentData = {}; fetchedPages = []; selectedLinks = []; autoUtilityPages = [];
   }
 
   function changeKeyword() {
@@ -564,7 +590,9 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: currentData.target_audience || ''
+          target_audience:        currentData.target_audience       || '',
+          utility_pages:          currentData.utility_pages         || [],
+          utility_pages_manual:   currentData.utility_pages_manual  || ''
         })
       });
       const raw = await res.text();
@@ -618,7 +646,9 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: currentData.target_audience || ''
+          target_audience:        currentData.target_audience       || '',
+          utility_pages:          currentData.utility_pages         || [],
+          utility_pages_manual:   currentData.utility_pages_manual  || ''
         })
       });
       const raw = await res.text();
@@ -671,7 +701,9 @@
           article_cost:           currentData.article_cost          || '',
           inputTokens:            currentData.inputTokens           || 0,
           outputTokens:           currentData.outputTokens          || 0,
-          target_audience: currentData.target_audience || ''
+          target_audience:        currentData.target_audience       || '',
+          utility_pages:          currentData.utility_pages         || [],
+          utility_pages_manual:   currentData.utility_pages_manual  || ''
         })
       });
       const raw = await res.text();
