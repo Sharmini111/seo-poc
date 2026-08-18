@@ -84,6 +84,8 @@
 
   <label>Target Keyword (required)</label>
   <input id="keyword" type="text" placeholder="e.g. best home gym equipment NZ"/>
+  <label>Topic <span class="optional-label">(optional — specific title/points the article must cover, e.g. "How to Do a Romanian Deadlift with Dumbbells: Proper Form, Benefits and Common Mistakes")</span></label>
+  <input id="topic" type="text" placeholder="e.g. exact title or specific angle the article should be built around"/>
   <label>Content Topic Ideas / Notes <span class="optional-label">(optional)</span></label>
   <textarea id="operator_topic_notes" placeholder="e.g. focus on budget options under $500, target beginners"></textarea>
   <label>Target Audience <span class="optional-label">(optional — used only for writing style)</span></label>
@@ -172,6 +174,7 @@
 
   let currentData       = {};
   let currentKeyword    = '';
+  let currentTopic      = '';
   let currentNotes      = '';
   let currentCountry    = 'us';
   let currentEnglish    = 'American';
@@ -226,9 +229,13 @@
     }
   }
 
+  let fetchingPages = false;
   async function fetchPages() {
+    console.trace('fetchPages called, fetchingPages=' + fetchingPages);
+    if (fetchingPages) return;
+    fetchingPages = true;
     const clientWebsite = document.getElementById('client_website').value.trim();
-    if (!clientWebsite) { alert('Please enter a client website URL first'); return; }
+    if (!clientWebsite) { alert('Please enter a client website URL first'); fetchingPages = false; return; }
     const btn = document.getElementById('fetch-btn');
     btn.textContent = 'Fetching...';
     btn.disabled = true;
@@ -273,6 +280,7 @@
     } finally {
       btn.textContent = 'Fetch Pages';
       btn.disabled = false;
+      fetchingPages = false;
     }
   }
 
@@ -377,6 +385,7 @@
 
   async function submitKeyword() {
     const keyword       = document.getElementById('keyword').value.trim();
+    const topic         = document.getElementById('topic').value.trim();
     const notes         = document.getElementById('operator_topic_notes').value.trim();
     const country       = document.getElementById('target_country').value;
     const english       = document.getElementById('english_variety').value;
@@ -386,6 +395,7 @@
     const utilityPagesManual = document.getElementById('utility_pages_manual').value.trim();
     if (!keyword) { alert('Please enter a keyword first'); return; }
     currentKeyword    = keyword;
+    currentTopic      = topic;
     currentNotes      = notes;
     currentCountry    = country;
     currentEnglish    = english;
@@ -400,6 +410,7 @@
         body: JSON.stringify({
           action:               'generate',
           keyword:              keyword,
+          topic:                topic,
           operator_topic_notes: notes,
           target_country:       country,
           english_variety:      english,
@@ -506,6 +517,7 @@
 
   function resetForm() {
     document.getElementById('keyword').value              = '';
+    document.getElementById('topic').value                 = '';
     document.getElementById('operator_topic_notes').value = '';
     document.getElementById('client_website').value       = '';
     document.getElementById('pages-box').style.display    = 'none';
@@ -516,7 +528,7 @@
     document.getElementById('utility-pages-manual-box').style.display = 'none';
     linkCount = 0;
     const taField = document.getElementById('target_audience'); if(taField) taField.value = '';
-    currentKeyword = ''; currentNotes = ''; currentCountry = 'us';
+    currentKeyword = ''; currentTopic = ''; currentNotes = ''; currentCountry = 'us';
     currentEnglish = 'American'; currentClientName = '';
     currentData = {}; fetchedPages = []; selectedLinks = []; autoUtilityPages = [];
   }
@@ -563,6 +575,7 @@
           action:                 'minor_edit',
           revision_instructions:  instructions,
           keyword:                currentKeyword,
+          topic:                  currentTopic                      || currentData.topic || '',
           article:                currentData.article               || '',
           unique_factor:          currentData.unique_factor         || '',
           content_brief:          currentData.content_brief         || '',
@@ -620,6 +633,7 @@
           action:                 'new_angle',
           revision_instructions:  instructions,
           keyword:                currentKeyword,
+          topic:                  currentTopic                      || currentData.topic || '',
           content_gaps:           currentData.content_gaps          || '',
           competitor_summary:     currentData.competitor_summary    || '',
           secondary_keywords:     currentData.secondary_keywords    || '',
@@ -648,7 +662,8 @@
           outputTokens:           currentData.outputTokens          || 0,
           target_audience:        currentData.target_audience       || '',
           utility_pages:          currentData.utility_pages         || [],
-          utility_pages_manual:   currentData.utility_pages_manual  || ''
+          utility_pages_manual:   currentData.utility_pages_manual  || '',
+          external_links_found:   currentData.external_links_found  || ''
         })
       });
       const raw = await res.text();
@@ -676,6 +691,7 @@
           action:                 'less_ai',
           revision_instructions:  instructions,
           keyword:                currentKeyword,
+          topic:                  currentTopic                      || currentData.topic || '',
           article:                currentData.article               || '',
           unique_factor:          currentData.unique_factor         || '',
           content_brief:          currentData.content_brief         || '',
@@ -730,6 +746,7 @@
         body: JSON.stringify({
           action:                 'approved',
           keyword:                currentKeyword,
+          topic:                  currentTopic                      || currentData.topic || '',
           article:                currentData.article               || '',
           unique_factor:          currentData.unique_factor         || '',
           content_brief:          currentData.content_brief         || '',
